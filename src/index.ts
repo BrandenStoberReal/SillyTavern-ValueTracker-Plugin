@@ -15,7 +15,7 @@ interface Plugin {
 }
 
 const chalk = new Chalk();
-const MODULE_NAME = '[SillyTavern-Example-Plugin]';
+const MODULE_NAME = '[SillyTavern-ValueTracker-Plugin]';
 
 /**
  * Initialize the plugin.
@@ -46,9 +46,9 @@ export async function exit(): Promise<void> {
 }
 
 export const info: PluginInfo = {
-    id: 'example',
-    name: 'Example Plugin',
-    description: 'A simple example plugin for SillyTavern server.',
+    id: 'valuetracker',
+    name: 'Value Tracking Plugin',
+    description: 'A simple value tracking plugin for SillyTavern server with database support.',
 };
 
 const plugin: Plugin = {

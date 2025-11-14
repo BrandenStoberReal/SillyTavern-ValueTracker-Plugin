@@ -1,7 +1,7 @@
 {
-    "name": "plugin-template-webpack",
+    "name": "plugin-value-tracker",
     "version": "1.0.0",
-    "description": "Example server plugin.",
+    "description": "Tracks and manages various character data intelligently.",
     "main": "dist/plugin.js",
     "type": "commonjs",
     "scripts": {
@@ -14,12 +14,12 @@
         "type": "git",
         "url": "git+https://github.com/SillyTavern/Plugin-WebpackTemplate.git"
     },
-    "author": "Cohee1207",
+    "author": "Branden",
     "license": "AGPL-3.0-or-later",
     "bugs": {
-        "url": "https://github.com/SillyTavern/Plugin-WebpackTemplate/issues"
+        "url": "https://github.com/BrandenStoberReal/SillyTavern-ValueTracker-Plugin/issues"
     },
-    "homepage": "https://github.com/SillyTavern/Plugin-WebpackTemplate#readme",
+    "homepage": "https://github.com/BrandenStoberReal/SillyTavern-ValueTracker-Plugin/#readme",
     "devDependencies": {
         "@eslint/js": "^9.0.0",
         "@types/express": "^4.17.21",

@@ -1,6 +1,6 @@
 import bodyParser from 'body-parser';
-import { Router } from 'express';
-import { Chalk } from 'chalk';
+import {Router} from 'express';
+import {Chalk} from 'chalk';
 
 interface PluginInfo {
     id: string;
@@ -30,8 +30,8 @@ export async function init(router: Router): Promise<void> {
     // Use body-parser to parse the request body
     router.post('/ping', jsonParser, async (req, res) => {
         try {
-            const { message } = req.body;
-            return res.json({ message: `Pong! ${message}` });
+            const {message} = req.body;
+            return res.json({message: `Pong! ${message}`});
         } catch (error) {
             console.error(chalk.red(MODULE_NAME), 'Request failed', error);
             return res.status(500).send('Internal Server Error');

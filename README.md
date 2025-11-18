@@ -72,7 +72,7 @@ await fetch('/api/plugins/valuetracker/register', {
         'Content-Type': 'application/json',
         'x-extension-id': 'my-extension-id'
     },
-    body: JSON.stringify({dbPath: './db/my-extension.db'})
+    body: "" // Body is not needed to register, but you can send it anyway if you want
 });
 
 // Then use your extension's endpoints - note the extension ID is now in the header

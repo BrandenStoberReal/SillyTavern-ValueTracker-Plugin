@@ -48,10 +48,6 @@ Extensions must register their database with the Value Tracker plugin via the AP
 POST /api/plugins/valuetracker/register
 Content-Type: application/json
 x-extension-id: my-extension-id
-
-{
-  "dbPath": "./db/my-extension.db"  // Optional: custom database path, defaults to './db/:extensionId.db'
-}
 ```
 
 **Deregister an extension:**

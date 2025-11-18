@@ -16,7 +16,7 @@ export interface Instance {
 export interface DataEntry {
     instanceId: string;  // References instance.id
     key: string;
-    value: any;
+    value: unknown;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -26,7 +26,7 @@ export interface DataEntry {
  */
 export interface FullInstance {
     instance: Instance;
-    data: Record<string, any>;
+    data: Record<string, unknown>;
 }
 
 /**
@@ -35,4 +35,28 @@ export interface FullInstance {
 export interface FullCharacter {
     character: Character;
     instances: FullInstance[];
+}
+
+/**
+ * Interface for database configuration per extension
+ */
+export interface DatabaseConfig {
+    extensionId: string;
+}
+
+/**
+ * Interface for cross-extension reading functionality
+ */
+export interface ICrossExtensionReader {
+    getFullCharacter(extensionId: string, characterId: string): FullCharacter | null;
+
+    getFullInstance(extensionId: string, instanceId: string): FullInstance | null;
+
+    getInstanceData(extensionId: string, instanceId: string): Record<string, unknown>;
+
+    getDataValue(extensionId: string, instanceId: string, key: string): unknown;
+
+    getAllCharacters(extensionId: string): Character[];
+
+    getInstancesByCharacter(extensionId: string, characterId: string): Instance[];
 }

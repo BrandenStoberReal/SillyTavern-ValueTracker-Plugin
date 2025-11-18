@@ -3,16 +3,39 @@ import * as path from 'path';
 import Database from 'better-sqlite3';
 
 import {Character, DataEntry, FullCharacter, FullInstance, Instance} from './interfaces';
+import {validateExtensionId} from './utils';
 
 export class DatabaseManager {
     private db: Database.Database;
     private dbPath: string;
+    private extensionId: string;
 
-    constructor(dbPath: string = path.join(process.cwd(), 'db', 'sqlite.db')) {
-        this.dbPath = dbPath;
-        this.ensureDirectoryExists(path.dirname(dbPath));
-        this.db = new Database(dbPath);
+    constructor(dbPath: string | undefined, extensionId: string) {
+        if (!extensionId) {
+            throw new Error('Extension ID is required for per-extension database');
+        }
+
+        // Sanitize and validate the extension ID
+        this.extensionId = validateExtensionId(extensionId);
+
+        // Force the database to be created in the 'db' directory with the sanitized extension ID as filename
+        if (dbPath) {
+            // If a dbPath is provided, ignore it for security reasons and use the default location
+            console.warn('[DatabaseManager] dbPath argument ignored for security. Database will be created in default location.');
+        }
+
+        this.dbPath = path.join(process.cwd(), 'db', `${this.extensionId}.db`);
+        this.ensureDirectoryExists(path.dirname(this.dbPath));
+        this.db = new Database(this.dbPath);
         this.initializeTables();
+    }
+
+    public getExtensionId(): string {
+        return this.extensionId;
+    }
+
+    public getDbPath(): string {
+        return this.dbPath;
     }
 
     /**
@@ -105,7 +128,7 @@ export class DatabaseManager {
      */
     public getInstancesByCharacter(characterId: string): Instance[] {
         return this.db.prepare(
-            'SELECT id, character_id as characterId, name, created_at as createdAt, updated_at as updatedAt FROM instances WHERE character_id = ?'
+            'SELECT id, character_id as characterId, name, created_at as createdAt, updated_at as updatedAt FROM instances WHERE character_id = ?',
         ).all(characterId) as Instance[];
     }
 
@@ -121,7 +144,7 @@ export class DatabaseManager {
     /**
      * Insert or update data entry for an instance
      */
-    public upsertData(instanceId: string, key: string, value: any): void {
+    public upsertData(instanceId: string, key: string, value: unknown): void {
         const now = new Date().toISOString();
         const valueStr = typeof value === 'object' ? JSON.stringify(value) : String(value);
 
@@ -135,16 +158,16 @@ export class DatabaseManager {
     /**
      * Get data for an instance
      */
-    public getData(instanceId: string): Record<string, any> {
+    public getData(instanceId: string): Record<string, unknown> {
         const rows = this.db.prepare(`
       SELECT key, value FROM data WHERE instance_id = ?
     `).all(instanceId) as DataEntry[];
 
-        const data: Record<string, any> = {};
+        const data: Record<string, unknown> = {};
         for (const row of rows) {
             try {
                 // Try to parse as JSON first, otherwise return as string
-                data[row.key] = JSON.parse(row.value);
+                data[row.key] = JSON.parse(row.value as string);
             } catch {
                 data[row.key] = row.value;
             }
@@ -156,7 +179,7 @@ export class DatabaseManager {
     /**
      * Get specific data key for an instance
      */
-    public getDataValue(instanceId: string, key: string): any {
+    public getDataValue(instanceId: string, key: string): unknown {
         const row = this.db.prepare(`
       SELECT value FROM data WHERE instance_id = ? AND key = ?
     `).get(instanceId, key) as { value: string } | undefined;
@@ -192,13 +215,13 @@ export class DatabaseManager {
             const data = this.getData(instance.id);
             return {
                 instance,
-                data
+                data,
             };
         });
 
         return {
             character,
-            instances: fullInstances
+            instances: fullInstances,
         };
     }
 
@@ -212,7 +235,7 @@ export class DatabaseManager {
         const data = this.getData(id);
         return {
             instance,
-            data
+            data,
         };
     }
 

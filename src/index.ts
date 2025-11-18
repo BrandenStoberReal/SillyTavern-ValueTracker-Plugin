@@ -1,8 +1,9 @@
 import bodyParser from 'body-parser';
 import {Router} from 'express';
 import {Chalk} from 'chalk';
-import {DatabaseManager} from './DatabaseManager';
 import {ApiEndpoints} from './ApiEndpoints';
+import {CrossExtensionReader} from './CrossExtensionReader';
+import {setCrossExtensionReader} from './ExtensionRegistration';
 
 interface PluginInfo {
     id: string;
@@ -18,7 +19,7 @@ interface Plugin {
 
 const chalk = new Chalk();
 const MODULE_NAME = '[SillyTavern-ValueTracker-Plugin]';
-let dbManager: DatabaseManager;
+let crossExtensionReader: CrossExtensionReader;
 let apiEndpoints: ApiEndpoints;
 
 /**
@@ -28,11 +29,18 @@ let apiEndpoints: ApiEndpoints;
 export async function init(router: Router): Promise<void> {
     const jsonParser = bodyParser.json();
 
-    // Initialize database manager
-    dbManager = new DatabaseManager();
-    apiEndpoints = new ApiEndpoints(dbManager);
+    crossExtensionReader = new CrossExtensionReader();
 
-    // Register API endpoints
+    // Note: There is no internal database for the plugin itself
+    // Extensions will register their own databases as needed
+
+    // Initialize API endpoints with the cross-extension reader
+    apiEndpoints = new ApiEndpoints(crossExtensionReader);
+
+    // Set the cross extension reader for other extensions to use
+    setCrossExtensionReader(crossExtensionReader);
+
+    // Register API endpoints - SillyTavern framework will handle prefixing with plugin ID
     router.use('/api', apiEndpoints.getRouter());
 
     // Used to check if the server plugin is running
@@ -55,9 +63,10 @@ export async function init(router: Router): Promise<void> {
 
 export async function exit(): Promise<void> {
     console.log(chalk.yellow(MODULE_NAME), 'Plugin exited');
-    // Close database connection
-    if (dbManager) {
-        dbManager.close();
+
+    // Close cross-extension reader
+    if (crossExtensionReader) {
+        crossExtensionReader.closeAll();
     }
 }
 

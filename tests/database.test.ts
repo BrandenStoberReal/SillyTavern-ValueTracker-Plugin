@@ -1,4 +1,5 @@
 import {DatabaseManager} from '../src/DatabaseManager';
+import {CrossExtensionReader} from '../src/CrossExtensionReader';
 
 // Simple test runner
 function runTest(testName: string, testFn: () => void): void {
@@ -20,7 +21,11 @@ function cleanup(db: DatabaseManager): void {
 
 // Main test function
 async function runTests(): Promise<void> {
-    const db = new DatabaseManager();
+    const db = new DatabaseManager('./db/test-db.sqlite', 'test-extension');
+    const crossExtensionReader = new CrossExtensionReader();
+
+    // Register the test database with the cross-extension reader
+    crossExtensionReader.registerExtensionDatabase('test-extension', db);
 
     // Clean up before tests
     cleanup(db);
@@ -32,19 +37,21 @@ async function runTests(): Promise<void> {
         if (!retrieved) throw new Error('Character not found after creation');
         if (retrieved.id !== 'char-1') throw new Error('Character ID mismatch');
         if (retrieved.name !== 'Test Character') throw new Error('Character name mismatch');
+        if (character.id !== retrieved.id) throw new Error('Upsert and retrieve character IDs do not match');
     });
 
     runTest('Should create and retrieve an instance', () => {
         const instance = db.upsertInstance({
             id: 'instance-1',
             characterId: 'char-1',
-            name: 'Test Instance'
+            name: 'Test Instance',
         });
         const retrieved = db.getInstance('instance-1');
 
         if (!retrieved) throw new Error('Instance not found after creation');
         if (retrieved.id !== 'instance-1') throw new Error('Instance ID mismatch');
         if (retrieved.characterId !== 'char-1') throw new Error('Instance character ID mismatch');
+        if (instance.id !== retrieved.id) throw new Error('Upsert and retrieve instance IDs do not match');
     });
 
     runTest('Should store arbitrary data in an instance', () => {
@@ -70,7 +77,7 @@ async function runTests(): Promise<void> {
             constitution: {
                 base: 14,
                 modifier: 2,
-            }
+            },
         });
 
         const data = db.getData('instance-1');
@@ -100,7 +107,7 @@ async function runTests(): Promise<void> {
             inventory: {
                 weapons: ['axe'],
                 potions: 0,
-            }
+            },
         };
 
         // First clear and add the new data
@@ -126,7 +133,7 @@ async function runTests(): Promise<void> {
             inventory: {  // Replace complex object
                 weapons: ['bow'],
                 arrows: 30,
-            }
+            },
         };
 
         for (const [key, value] of Object.entries(mergeData)) {
@@ -154,23 +161,23 @@ async function runTests(): Promise<void> {
     });
 
     runTest('Should handle deleting a character and its instances/data', () => {
-        // Create a second instance for the same character
+        // Create a second character and instance for this test
+        db.upsertCharacter({id: 'char-delete-test', name: 'Delete Test Character'});
         db.upsertInstance({
-            id: 'instance-2',
-            characterId: 'char-1',
-            name: 'Second Instance'
+            id: 'instance-delete-test',
+            characterId: 'char-delete-test',
+            name: 'Delete Test Instance',
         });
 
-        // Add some data to the second instance
-        db.upsertData('instance-2', 'special', 'value');
+        // Add some data to the delete test instance
+        db.upsertData('instance-delete-test', 'special', 'value');
 
         // Delete the character
-        const success = db.deleteCharacter('char-1');
+        const success = db.deleteCharacter('char-delete-test');
 
         if (!success) throw new Error('Character deletion failed');
-        if (db.getCharacter('char-1') !== null) throw new Error('Character still exists after deletion');
-        if (db.getInstance('instance-1') !== null) throw new Error('Instance still exists after character deletion');
-        if (db.getInstance('instance-2') !== null) throw new Error('Second instance still exists after character deletion');
+        if (db.getCharacter('char-delete-test') !== null) throw new Error('Character still exists after deletion');
+        if (db.getInstance('instance-delete-test') !== null) throw new Error('Instance still exists after character deletion');
     });
 
     runTest('Should handle large amounts of data', () => {
@@ -186,8 +193,8 @@ async function runTests(): Promise<void> {
                 properties: {
                     value: Math.random() * 100,
                     tags: [`tag${i % 5}`, `group${Math.floor(i / 10)}`],
-                    active: i % 2 === 0
-                }
+                    active: i % 2 === 0,
+                },
             });
         }
 
@@ -199,9 +206,90 @@ async function runTests(): Promise<void> {
         db.deleteCharacter('stress-test');
     });
 
+    // Test cross-extension functionality
+    runTest('Should allow cross-extension reading of characters', () => {
+        // Verify that the cross-extension reader can read the character we created
+        const fullCharacter = crossExtensionReader.getFullCharacter('test-extension', 'char-1');
+
+        if (!fullCharacter) throw new Error('Cross-extension reader could not retrieve character');
+        if (fullCharacter.character.id !== 'char-1') throw new Error('Cross-extension character ID mismatch');
+        if (fullCharacter.instances.length === 0) throw new Error('Cross-extension no instances found');
+    });
+
+    runTest('Should allow cross-extension reading of instances', () => {
+        // Verify that the cross-extension reader can read the instance we created
+        const fullInstance = crossExtensionReader.getFullInstance('test-extension', 'instance-1');
+
+        if (!fullInstance) throw new Error('Cross-extension reader could not retrieve instance');
+        if (fullInstance.instance.id !== 'instance-1') throw new Error('Cross-extension instance ID mismatch');
+        if (fullInstance.data.health !== 75) throw new Error('Cross-extension data not retrieved correctly');
+    });
+
+    runTest('Should allow cross-extension reading of instance data', () => {
+        // Verify that the cross-extension reader can read specific data
+        const data = crossExtensionReader.getInstanceData('test-extension', 'instance-1');
+
+        if (!data) throw new Error('Cross-extension reader could not retrieve instance data');
+        if (data.health !== 75) throw new Error('Cross-extension health value mismatch');
+        if (data.inventory.arrows !== 30) throw new Error('Cross-extension inventory data mismatch');
+    });
+
+    runTest('Should allow cross-extension reading of specific data keys', () => {
+        // Verify that the cross-extension reader can read specific data keys
+        const healthValue = crossExtensionReader.getDataValue('test-extension', 'instance-1', 'health');
+
+        if (healthValue !== 75) throw new Error('Cross-extension specific data key value mismatch');
+
+        const inventoryValue = crossExtensionReader.getDataValue('test-extension', 'instance-1', 'inventory');
+        if (inventoryValue.arrows !== 30) throw new Error('Cross-extension specific complex data key value mismatch');
+    });
+
+    runTest('Should return empty array for non-existent extension', () => {
+        // Verify that the cross-extension reader handles non-existent extensions gracefully
+        const characters = crossExtensionReader.getAllCharacters('non-existent-extension');
+
+        if (!Array.isArray(characters) || characters.length !== 0) {
+            throw new Error('Cross-extension reader did not return empty array for non-existent extension');
+        }
+    });
+
+    runTest('Should handle extension database registration and deregistration', () => {
+        // Create a second database for testing registration/deregistration
+        const db2 = new DatabaseManager('./db/test-db-2.sqlite', 'test-extension-2');
+        const testDbPath = db2.getDbPath();
+
+        // Verify the database path was created properly (use the variable to avoid unused warning)
+        if (!testDbPath || testDbPath.length === 0) {
+            throw new Error('Database path should not be empty');
+        }
+
+        // Register the second database
+        crossExtensionReader.registerExtensionDatabase('test-extension-2', db2);
+
+        // Verify it's registered by creating a character in it
+        db2.upsertCharacter({id: 'char-2', name: 'Test Character 2'});
+        const charFromReader = crossExtensionReader.getFullCharacter('test-extension-2', 'char-2');
+        if (!charFromReader || charFromReader.character.id !== 'char-2') {
+            throw new Error('Character not accessible through registered extension');
+        }
+
+        // Deregister the database
+        crossExtensionReader.deregisterExtensionDatabase('test-extension-2');
+
+        // Verify it's no longer accessible
+        const charAfterDereg = crossExtensionReader.getFullCharacter('test-extension-2', 'char-2');
+        if (charAfterDereg !== null) {
+            throw new Error('Character still accessible after deregistration');
+        }
+
+        // Clean up the second database
+        db2.close();
+    });
+
     // Clean up after tests
     cleanup(db);
     db.close();
+    crossExtensionReader.closeAll();
 
     console.log('\nAll tests completed!');
 }

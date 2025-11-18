@@ -1,6 +1,8 @@
 import bodyParser from 'body-parser';
 import {Router} from 'express';
 import {Chalk} from 'chalk';
+import {DatabaseManager} from './DatabaseManager';
+import {ApiEndpoints} from './ApiEndpoints';
 
 interface PluginInfo {
     id: string;
@@ -16,6 +18,8 @@ interface Plugin {
 
 const chalk = new Chalk();
 const MODULE_NAME = '[SillyTavern-ValueTracker-Plugin]';
+let dbManager: DatabaseManager;
+let apiEndpoints: ApiEndpoints;
 
 /**
  * Initialize the plugin.
@@ -23,6 +27,14 @@ const MODULE_NAME = '[SillyTavern-ValueTracker-Plugin]';
  */
 export async function init(router: Router): Promise<void> {
     const jsonParser = bodyParser.json();
+
+    // Initialize database manager
+    dbManager = new DatabaseManager();
+    apiEndpoints = new ApiEndpoints(dbManager);
+
+    // Register API endpoints
+    router.use('/api', apiEndpoints.getRouter());
+
     // Used to check if the server plugin is running
     router.post('/probe', (_req, res) => {
         return res.sendStatus(204);
@@ -43,6 +55,10 @@ export async function init(router: Router): Promise<void> {
 
 export async function exit(): Promise<void> {
     console.log(chalk.yellow(MODULE_NAME), 'Plugin exited');
+    // Close database connection
+    if (dbManager) {
+        dbManager.close();
+    }
 }
 
 export const info: PluginInfo = {

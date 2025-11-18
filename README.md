@@ -1,16 +1,49 @@
-# Plugin-WebpackTemplate
+# SillyTavern Value Tracker Plugin
 
-Template repository for server plugins using TypeScript and Webpack.
+This plugin provides a SQLite-based storage system for tracking character values and instances in SillyTavern. It
+features a complete API for managing characters, instances, and arbitrary data storage.
 
-## How to use
+## Features
 
-1. Click "Use this template" on the GitHub page.
-2. Create a new repository and clone it to your local machine.
-3. Open the repository in your code editor and run `npm install`.
-4. Edit the `package.json` file.
-5. Write the source code in the `src` directory.
-6. When you're ready to test - run `npm run build`.
-7. A minimized bundle will appear in `dist`, ready to be plugged into SillyTavern.
+- SQLite database storage for persistent data
+- Unique character and instance management
+- Arbitrary data storage per instance
+- RESTful API endpoints for all operations
+- Support for removing, overriding, and merging data
+- Unlimited number of characters and instances
 
-> [!TIP]
-> If you want to test your plugin live, clone the repo into the `/plugins` folder of your SillyTavern installation.
+## Database Schema
+
+The database consists of three main tables:
+
+1. `characters` - Stores character information with unique IDs
+2. `instances` - Stores character instances with unique IDs per character (instance metadata only)
+3. `data` - Stores arbitrary key-value data for each instance (acts as a subtable per instance)
+
+### Structure
+
+```
+[Root DB] -> characters[0] -> instances[0] -> arbitrary data here
+```
+
+The instances table holds only instance metadata, while the dedicated data table holds the arbitrary data associated
+with each instance.
+
+## API Endpoints
+
+See [API.md](API.md) for complete API reference.
+
+The API supports all CRUD operations on characters, instances (metadata), and data (arbitrary key-value pairs).
+
+## Arbitrary Data Support
+
+The system supports storing any type of data in instances, including:
+
+- Primitive values (strings, numbers, booleans)
+- Complex objects and arrays
+- Nested structures
+- Any JSON-serializable data
+
+## Storage Location
+
+The SQLite database is stored at `./db/sqlite.db` relative to the application root.

@@ -44,7 +44,7 @@ export async function init(router: Router): Promise<void> {
     router.use('/', apiEndpoints.getRouter());
 
     // Used to check if the server plugin is running
-    router.post('/probe', (_req, res) => {
+    router.get('/probe', (_req, res) => {
         return res.sendStatus(204);
     });
     // Use body-parser to parse the request body

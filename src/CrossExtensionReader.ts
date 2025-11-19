@@ -179,6 +179,7 @@ export class CrossExtensionReader implements ICrossExtensionReader {
                 console.error(`[CrossExtensionReader] Error closing database for extension ${extensionId}:`, error);
             }
         }
-        this.extensionDatabases.clear();
+        // Create a new map to ensure all references are cleared
+        this.extensionDatabases = new Map();
     }
 }

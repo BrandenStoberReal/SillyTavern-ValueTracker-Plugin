@@ -30,8 +30,11 @@ export function sanitizeExtensionId(extensionId: string): string {
 export function validateExtensionId(extensionId: string): string {
     const sanitized = sanitizeExtensionId(extensionId);
 
+    // Trim whitespace after sanitization
+    const trimmed = sanitized.trim();
+
     // Additional validation to ensure the ID is reasonable
-    if (sanitized.length < 1) {
+    if (trimmed.length < 1) {
         throw new Error('Extension ID must be at least 1 character');
     }
 
@@ -41,9 +44,31 @@ export function validateExtensionId(extensionId: string): string {
     }
 
     // Prevent extension IDs that start with a dot (hidden files on Unix systems)
-    if (sanitized.startsWith('.')) {
+    if (trimmed.startsWith('.')) {
         throw new Error('Extension ID cannot start with a dot');
     }
 
-    return sanitized;
+    return trimmed;
+}
+
+/**
+ * Validates if a string is a valid ID (alphanumeric, hyphens, underscores)
+ */
+export function isValidId(id: string | undefined): boolean {
+    if (!id) return false;
+    return /^[a-zA-Z0-9_-]+$/.test(id);
+}
+
+/**
+ * Validates that the provided value is a valid string
+ */
+export function isValidString(value: unknown): value is string {
+    return typeof value === 'string' && value.trim().length > 0;
+}
+
+/**
+ * Validates that the provided value is a valid object
+ */
+export function isValidObject(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

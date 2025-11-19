@@ -10,7 +10,10 @@
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "test": "ts-node tests/database.test.ts",
-    "test:dev": "tsx tests/database.test.ts"
+    "test:dev": "tsx tests/database.test.ts",
+    "test:api": "tsx tests/api.test.ts",
+    "test:validation": "tsx tests/validation.test.ts",
+    "test:all": "npm run test && npm run test:api && npm run test:validation"
   },
   "repository": {
     "type": "git",

@@ -1,6 +1,7 @@
 import express, {Request, Response} from 'express';
 import {DatabaseManager} from './DatabaseManager';
 import {CrossExtensionReader} from './CrossExtensionReader';
+import {isValidId} from './utils';
 
 export class ApiEndpoints {
     private crossExtensionReader: CrossExtensionReader;
@@ -72,6 +73,11 @@ export class ApiEndpoints {
                 return;
             }
 
+            if (!isValidId(extensionId)) {
+                res.status(400).json({error: 'Valid extension ID is required (alphanumeric, hyphens, underscores only)'});
+                return;
+            }
+
             const dbManager = this.crossExtensionReader.getDbManager(extensionId);
             if (!dbManager) {
                 res.status(404).json({error: `Database not found for extension: ${extensionId}`});
@@ -95,6 +101,11 @@ export class ApiEndpoints {
             }
 
             const {id} = req.params;
+            if (!isValidId(id)) {
+                res.status(400).json({error: 'Valid character ID is required (alphanumeric, hyphens, underscores only)'});
+                return;
+            }
+
             const dbManager = this.crossExtensionReader.getDbManager(extensionId);
             if (!dbManager) {
                 res.status(404).json({error: `Database not found for extension: ${extensionId}`});
@@ -125,8 +136,8 @@ export class ApiEndpoints {
 
             const {id, name} = req.body;
 
-            if (!id) {
-                res.status(400).json({error: 'Character ID is required'});
+            if (!isValidId(id)) {
+                res.status(400).json({error: 'Valid character ID is required (alphanumeric, hyphens, underscores only)'});
                 return;
             }
 
@@ -136,7 +147,7 @@ export class ApiEndpoints {
                 return;
             }
 
-            const character = dbManager.upsertCharacter({id, name});
+            const character = dbManager.upsertCharacter({id, name: name || undefined});
             res.json(character);
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -153,6 +164,11 @@ export class ApiEndpoints {
             }
 
             const {id} = req.params;
+            if (!isValidId(id)) {
+                res.status(400).json({error: 'Valid character ID is required (alphanumeric, hyphens, underscores only)'});
+                return;
+            }
+
             const dbManager = this.crossExtensionReader.getDbManager(extensionId);
             if (!dbManager) {
                 res.status(404).json({error: `Database not found for extension: ${extensionId}`});
@@ -181,6 +197,12 @@ export class ApiEndpoints {
                 res.status(400).json({error: 'Extension ID is required in header: x-extension-id'});
                 return;
             }
+
+            if (!isValidId(extensionId)) {
+                res.status(400).json({error: 'Valid extension ID is required (alphanumeric, hyphens, underscores only)'});
+                return;
+            }
+
             // This might be too expensive if there are many instances, but included for completeness
             const {characterId} = req.query;
 
@@ -190,11 +212,11 @@ export class ApiEndpoints {
                 return;
             }
 
-            if (characterId) {
-                const instances = dbManager.getInstancesByCharacter(characterId as string);
+            if (typeof characterId === 'string' && isValidId(characterId)) {
+                const instances = dbManager.getInstancesByCharacter(characterId);
                 res.json(instances);
             } else {
-                res.status(400).json({error: 'characterId query parameter is required to get all instances'});
+                res.status(400).json({error: 'Valid characterId query parameter is required (alphanumeric, hyphens, underscores only)'});
             }
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -211,6 +233,11 @@ export class ApiEndpoints {
             }
 
             const {id} = req.params;
+            if (!isValidId(id)) {
+                res.status(400).json({error: 'Valid instance ID is required (alphanumeric, hyphens, underscores only)'});
+                return;
+            }
+
             const dbManager = this.crossExtensionReader.getDbManager(extensionId);
             if (!dbManager) {
                 res.status(404).json({error: `Database not found for extension: ${extensionId}`});
@@ -240,6 +267,11 @@ export class ApiEndpoints {
             }
 
             const {characterId} = req.params;
+            if (!isValidId(characterId)) {
+                res.status(400).json({error: 'Valid character ID is required (alphanumeric, hyphens, underscores only)'});
+                return;
+            }
+
             const dbManager = this.crossExtensionReader.getDbManager(extensionId);
             if (!dbManager) {
                 res.status(404).json({error: `Database not found for extension: ${extensionId}`});
@@ -264,8 +296,8 @@ export class ApiEndpoints {
 
             const {id, characterId, name} = req.body;
 
-            if (!id || !characterId) {
-                res.status(400).json({error: 'Instance ID and Character ID are required'});
+            if (!isValidId(id) || !isValidId(characterId)) {
+                res.status(400).json({error: 'Valid instance ID and character ID are required (alphanumeric, hyphens, underscores only)'});
                 return;
             }
 
@@ -275,7 +307,7 @@ export class ApiEndpoints {
                 return;
             }
 
-            const instance = dbManager.upsertInstance({id, characterId, name});
+            const instance = dbManager.upsertInstance({id, characterId, name: name || undefined});
             res.json(instance);
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -292,6 +324,11 @@ export class ApiEndpoints {
             }
 
             const {id} = req.params;
+            if (!isValidId(id)) {
+                res.status(400).json({error: 'Valid instance ID is required (alphanumeric, hyphens, underscores only)'});
+                return;
+            }
+
             const dbManager = this.crossExtensionReader.getDbManager(extensionId);
             if (!dbManager) {
                 res.status(404).json({error: `Database not found for extension: ${extensionId}`});
@@ -322,6 +359,11 @@ export class ApiEndpoints {
             }
 
             const {id} = req.params;
+            if (!isValidId(id)) {
+                res.status(400).json({error: 'Valid instance ID is required (alphanumeric, hyphens, underscores only)'});
+                return;
+            }
+
             const dbManager = this.crossExtensionReader.getDbManager(extensionId);
             if (!dbManager) {
                 res.status(404).json({error: `Database not found for extension: ${extensionId}`});
@@ -345,6 +387,11 @@ export class ApiEndpoints {
             }
 
             const {id, key} = req.params;
+            if (!isValidId(id) || typeof key !== 'string' || key.trim().length === 0) {
+                res.status(400).json({error: 'Valid instance ID and key are required (alphanumeric, hyphens, underscores only for ID)'});
+                return;
+            }
+
             const dbManager = this.crossExtensionReader.getDbManager(extensionId);
             if (!dbManager) {
                 res.status(404).json({error: `Database not found for extension: ${extensionId}`});
@@ -370,8 +417,8 @@ export class ApiEndpoints {
             const {id} = req.params;
             const {key, value} = req.body;
 
-            if (!key) {
-                res.status(400).json({error: 'Data key is required'});
+            if (!isValidId(id) || typeof key !== 'string' || key.trim().length === 0) {
+                res.status(400).json({error: 'Valid instance ID and data key are required (alphanumeric, hyphens, underscores only for ID)'});
                 return;
             }
 
@@ -398,6 +445,11 @@ export class ApiEndpoints {
             }
 
             const {id, key} = req.params;
+            if (!isValidId(id) || typeof key !== 'string' || key.trim().length === 0) {
+                res.status(400).json({error: 'Valid instance ID and key are required (alphanumeric, hyphens, underscores only for ID)'});
+                return;
+            }
+
             const dbManager = this.crossExtensionReader.getDbManager(extensionId);
             if (!dbManager) {
                 res.status(404).json({error: `Database not found for extension: ${extensionId}`});
@@ -427,6 +479,11 @@ export class ApiEndpoints {
             }
 
             const {id} = req.params;
+            if (!isValidId(id)) {
+                res.status(400).json({error: 'Valid instance ID is required (alphanumeric, hyphens, underscores only)'});
+                return;
+            }
+
             const dbManager = this.crossExtensionReader.getDbManager(extensionId);
             if (!dbManager) {
                 res.status(404).json({error: `Database not found for extension: ${extensionId}`});
@@ -457,6 +514,11 @@ export class ApiEndpoints {
             }
 
             const {characterId} = req.params;
+            if (!isValidId(characterId)) {
+                res.status(400).json({error: 'Valid character ID is required (alphanumeric, hyphens, underscores only)'});
+                return;
+            }
+
             const dbManager = this.crossExtensionReader.getDbManager(extensionId);
             if (!dbManager) {
                 res.status(404).json({error: `Database not found for extension: ${extensionId}`});
@@ -490,6 +552,11 @@ export class ApiEndpoints {
             const {id} = req.params;
             const data: Record<string, unknown> = req.body;
 
+            if (!isValidId(id) || typeof data !== 'object' || data === null) {
+                res.status(400).json({error: 'Valid instance ID and data object are required'});
+                return;
+            }
+
             const dbManager = this.crossExtensionReader.getDbManager(extensionId);
             if (!dbManager) {
                 res.status(404).json({error: `Database not found for extension: ${extensionId}`});
@@ -501,7 +568,9 @@ export class ApiEndpoints {
 
             // Then add the new data
             for (const [key, value] of Object.entries(data)) {
-                dbManager.upsertData(id, key, value);
+                if (typeof key === 'string' && key.trim().length > 0) {
+                    dbManager.upsertData(id, key, value);
+                }
             }
 
             res.json({success: true, message: 'Instance data overridden successfully'});
@@ -522,6 +591,11 @@ export class ApiEndpoints {
             const {id} = req.params;
             const data: Record<string, unknown> = req.body;
 
+            if (!isValidId(id) || typeof data !== 'object' || data === null) {
+                res.status(400).json({error: 'Valid instance ID and data object are required'});
+                return;
+            }
+
             const dbManager = this.crossExtensionReader.getDbManager(extensionId);
             if (!dbManager) {
                 res.status(404).json({error: `Database not found for extension: ${extensionId}`});
@@ -530,7 +604,9 @@ export class ApiEndpoints {
 
             // Add or update the provided data keys while keeping existing ones
             for (const [key, value] of Object.entries(data)) {
-                dbManager.upsertData(id, key, value);
+                if (typeof key === 'string' && key.trim().length > 0) {
+                    dbManager.upsertData(id, key, value);
+                }
             }
 
             res.json({success: true, message: 'Instance data merged successfully'});
@@ -551,8 +627,8 @@ export class ApiEndpoints {
             const {id} = req.params;
             const {keys}: { keys: string[] } = req.body;
 
-            if (!Array.isArray(keys)) {
-                res.status(400).json({error: 'Keys array is required'});
+            if (!isValidId(id) || !Array.isArray(keys)) {
+                res.status(400).json({error: 'Valid instance ID and keys array are required'});
                 return;
             }
 
@@ -564,8 +640,10 @@ export class ApiEndpoints {
 
             let removedCount = 0;
             for (const key of keys) {
-                if (dbManager.deleteDataValue(id, key)) {
-                    removedCount++;
+                if (typeof key === 'string' && key.trim().length > 0) {
+                    if (dbManager.deleteDataValue(id, key)) {
+                        removedCount++;
+                    }
                 }
             }
 
@@ -582,6 +660,11 @@ export class ApiEndpoints {
             const extensionId = this.getExtensionIdFromHeader(req);
             if (!extensionId) {
                 res.status(400).json({error: 'Extension ID is required in header: x-extension-id'});
+                return;
+            }
+
+            if (!isValidId(extensionId)) {
+                res.status(400).json({error: 'Valid extension ID is required (alphanumeric, hyphens, underscores only)'});
                 return;
             }
 
@@ -608,6 +691,11 @@ export class ApiEndpoints {
                 return;
             }
 
+            if (!isValidId(extensionId)) {
+                res.status(400).json({error: 'Valid extension ID is required (alphanumeric, hyphens, underscores only)'});
+                return;
+            }
+
             // Deregister the extension from the cross-extension reader
             this.crossExtensionReader.deregisterExtensionDatabase(extensionId);
 
@@ -622,6 +710,12 @@ export class ApiEndpoints {
     private getCrossExtensionCharacter(req: Request, res: Response): void {
         try {
             const {extensionId, id} = req.params;
+
+            if (!isValidId(extensionId) || !isValidId(id)) {
+                res.status(400).json({error: 'Valid extension ID and character ID are required (alphanumeric, hyphens, underscores only)'});
+                return;
+            }
+
             const character = this.crossExtensionReader.getFullCharacter(extensionId, id);
 
             if (!character) {
@@ -639,6 +733,12 @@ export class ApiEndpoints {
     private getCrossExtensionInstance(req: Request, res: Response): void {
         try {
             const {extensionId, id} = req.params;
+
+            if (!isValidId(extensionId) || !isValidId(id)) {
+                res.status(400).json({error: 'Valid extension ID and instance ID are required (alphanumeric, hyphens, underscores only)'});
+                return;
+            }
+
             const instance = this.crossExtensionReader.getFullInstance(extensionId, id);
 
             if (!instance) {
@@ -656,6 +756,12 @@ export class ApiEndpoints {
     private getCrossExtensionInstanceData(req: Request, res: Response): void {
         try {
             const {extensionId, id} = req.params;
+
+            if (!isValidId(extensionId) || !isValidId(id)) {
+                res.status(400).json({error: 'Valid extension ID and instance ID are required (alphanumeric, hyphens, underscores only)'});
+                return;
+            }
+
             const data = this.crossExtensionReader.getInstanceData(extensionId, id);
             res.json(data);
         } catch (error: unknown) {
@@ -667,6 +773,12 @@ export class ApiEndpoints {
     private getCrossExtensionInstanceDataKey(req: Request, res: Response): void {
         try {
             const {extensionId, id, key} = req.params;
+
+            if (!isValidId(extensionId) || !isValidId(id) || typeof key !== 'string' || key.trim().length === 0) {
+                res.status(400).json({error: 'Valid extension ID, instance ID, and key are required (alphanumeric, hyphens, underscores only for IDs)'});
+                return;
+            }
+
             const value = this.crossExtensionReader.getDataValue(extensionId, id, key);
             res.json({[key]: value});
         } catch (error: unknown) {
@@ -678,6 +790,12 @@ export class ApiEndpoints {
     private getCrossExtensionAllCharacters(req: Request, res: Response): void {
         try {
             const {extensionId} = req.params;
+
+            if (!isValidId(extensionId)) {
+                res.status(400).json({error: 'Valid extension ID is required (alphanumeric, hyphens, underscores only)'});
+                return;
+            }
+
             const characters = this.crossExtensionReader.getAllCharacters(extensionId);
             res.json(characters);
         } catch (error: unknown) {
@@ -689,6 +807,12 @@ export class ApiEndpoints {
     private getCrossExtensionInstancesByCharacter(req: Request, res: Response): void {
         try {
             const {extensionId, characterId} = req.params;
+
+            if (!isValidId(extensionId) || !isValidId(characterId)) {
+                res.status(400).json({error: 'Valid extension ID and character ID are required (alphanumeric, hyphens, underscores only)'});
+                return;
+            }
+
             const instances = this.crossExtensionReader.getInstancesByCharacter(extensionId, characterId);
             res.json(instances);
         } catch (error: unknown) {

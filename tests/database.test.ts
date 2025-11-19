@@ -85,9 +85,16 @@ async function runTests(): Promise<void> {
         if (data.health !== 100) throw new Error('Primitive number value not stored correctly');
         if (data.level !== 'advanced') throw new Error('Primitive string value not stored correctly');
         if (data.isAlive !== true) throw new Error('Primitive boolean value not stored correctly');
-        if (data.inventory.weapons[0] !== 'sword') throw new Error('Complex object not stored correctly');
-        if (data.quests.length !== 3) throw new Error('Array not stored correctly');
-        if (data.stats.constitution.modifier !== 2) throw new Error('Nested object not stored correctly');
+        const inventory = data.inventory as { weapons: string[]; potions: number; gold: number };
+        if (inventory.weapons[0] !== 'sword') throw new Error('Complex object not stored correctly');
+        const quests = data.quests as string[];
+        if (quests.length !== 3) throw new Error('Array not stored correctly');
+        const stats = data.stats as {
+            strength: number;
+            dexterity: number;
+            constitution: { base: number; modifier: number }
+        };
+        if (stats.constitution.modifier !== 2) throw new Error('Nested object not stored correctly');
     });
 
     runTest('Should retrieve full character with instances and data', () => {
@@ -120,7 +127,8 @@ async function runTests(): Promise<void> {
 
         if (data.health !== 50) throw new Error('Override data not stored correctly');
         if (data.newStat !== 'special') throw new Error('New override key not added correctly');
-        if (data.inventory.weapons[0] !== 'axe') throw new Error('Override object not stored correctly');
+        const inventory = data.inventory as { weapons: string[] };
+        if (inventory.weapons[0] !== 'axe') throw new Error('Override object not stored correctly');
 
         // Verify old data is gone
         if ('level' in data) throw new Error('Old data not cleared during override');
@@ -144,8 +152,9 @@ async function runTests(): Promise<void> {
 
         if (data.health !== 75) throw new Error('Merged data not updated correctly');
         if (data.mergedStat !== 'merged') throw new Error('New merged key not added correctly');
-        if (data.inventory.weapons[0] !== 'bow') throw new Error('Merged object not updated correctly');
-        if (data.inventory.arrows !== 30) throw new Error('New merged object property not added correctly');
+        const inventory = data.inventory as { weapons: string[]; arrows: number };
+        if (inventory.weapons[0] !== 'bow') throw new Error('Merged object not updated correctly');
+        if (inventory.arrows !== 30) throw new Error('New merged object property not added correctly');
 
         // Old data should still exist if not overwritten
         if (!('newStat' in data)) throw new Error('Old data was incorrectly removed during merge');
@@ -231,7 +240,8 @@ async function runTests(): Promise<void> {
 
         if (!data) throw new Error('Cross-extension reader could not retrieve instance data');
         if (data.health !== 75) throw new Error('Cross-extension health value mismatch');
-        if (data.inventory.arrows !== 30) throw new Error('Cross-extension inventory data mismatch');
+        const inventory = data.inventory as { arrows: number };
+        if (inventory.arrows !== 30) throw new Error('Cross-extension inventory data mismatch');
     });
 
     runTest('Should allow cross-extension reading of specific data keys', () => {
@@ -241,7 +251,8 @@ async function runTests(): Promise<void> {
         if (healthValue !== 75) throw new Error('Cross-extension specific data key value mismatch');
 
         const inventoryValue = crossExtensionReader.getDataValue('test-extension', 'instance-1', 'inventory');
-        if (inventoryValue.arrows !== 30) throw new Error('Cross-extension specific complex data key value mismatch');
+        const inventory = inventoryValue as { arrows: number };
+        if (inventory.arrows !== 30) throw new Error('Cross-extension specific complex data key value mismatch');
     });
 
     runTest('Should return empty array for non-existent extension', () => {
@@ -284,6 +295,148 @@ async function runTests(): Promise<void> {
 
         // Clean up the second database
         db2.close();
+    });
+
+    // Test edge cases and error conditions
+    runTest('Should handle upsert with invalid data', () => {
+        try {
+            // Test upserting without required ID
+            let errorCaught = false;
+            try {
+                db.upsertCharacter({id: '', name: 'Invalid Character'});
+            } catch (e) {
+                errorCaught = true;
+            }
+            if (!errorCaught) {
+                throw new Error('Should have thrown error for empty ID');
+            }
+
+            // Test upserting instance without required fields
+            errorCaught = false;
+            try {
+                db.upsertInstance({id: '', characterId: 'char-1', name: 'Invalid Instance'});
+            } catch (e) {
+                errorCaught = true;
+            }
+            if (!errorCaught) {
+                throw new Error('Should have thrown error for empty ID');
+            }
+
+            // Test upserting instance without characterId
+            errorCaught = false;
+            try {
+                db.upsertInstance({id: 'instance-no-char', characterId: '', name: 'Invalid Instance'});
+            } catch (e) {
+                errorCaught = true;
+            }
+            if (!errorCaught) {
+                throw new Error('Should have thrown error for empty characterId');
+            }
+        } catch (e) {
+            throw e;
+        }
+    });
+
+    runTest('Should handle missing data retrieval gracefully', () => {
+        // Test retrieving non-existent character
+        const missingCharacter = db.getCharacter('non-existent');
+        if (missingCharacter !== null) {
+            throw new Error('Should return null for non-existent character');
+        }
+
+        // Test retrieving non-existent instance
+        const missingInstance = db.getInstance('non-existent');
+        if (missingInstance !== null) {
+            throw new Error('Should return null for non-existent instance');
+        }
+
+        // Test retrieving non-existent data key
+        const missingDataValue = db.getDataValue('instance-1', 'non-existent-key');
+        if (missingDataValue !== undefined) {
+            throw new Error('Should return undefined for non-existent data key');
+        }
+
+        // Test retrieving data for non-existent instance
+        const missingData = db.getData('non-existent-instance');
+        if (Object.keys(missingData).length !== 0) {
+            throw new Error('Should return empty object for non-existent instance data');
+        }
+    });
+
+    runTest('Should handle data values with special characters', () => {
+        // Test storing data with special characters
+        const specialString = 'Special chars: \n\r\t\'"\\!@#$%^&*()';
+        const specialObj = {
+            'key with spaces': 'value with spaces',
+            'key-with-dashes': 'value-with-dashes',
+            'key_with_underscores': 'value_with_underscores',
+            'key.with.dots': 'value.with.dots',
+            'key/with/slashes': 'value/with/slashes',
+        };
+
+        db.upsertData('instance-1', 'special-string', specialString);
+        db.upsertData('instance-1', 'special-object', specialObj);
+
+        const retrievedString = db.getDataValue('instance-1', 'special-string');
+        if (retrievedString !== specialString) {
+            throw new Error('Special character string not stored correctly');
+        }
+
+        const retrievedObj = db.getDataValue('instance-1', 'special-object');
+        if (JSON.stringify(retrievedObj) !== JSON.stringify(specialObj)) {
+            throw new Error('Special character object not stored correctly');
+        }
+    });
+
+    runTest('Should handle data values with very large strings', () => {
+        // Test storing very large data values
+        const largeString = 'A'.repeat(10000); // 10KB string
+        const largeObj = {
+            data: largeString,
+            array: Array(1000).fill(largeString),
+            nested: {deep: {deeper: {deepest: largeString}}}
+        };
+
+        db.upsertData('instance-1', 'large-string', largeString);
+        db.upsertData('instance-1', 'large-object', largeObj);
+
+        const retrievedString = db.getDataValue('instance-1', 'large-string');
+        if (retrievedString !== largeString) {
+            throw new Error('Large string not stored correctly');
+        }
+
+        const retrievedObj = db.getDataValue('instance-1', 'large-object');
+        if (JSON.stringify(retrievedObj) !== JSON.stringify(largeObj)) {
+            throw new Error('Large object not stored correctly');
+        }
+    });
+
+    runTest('Should handle database connection state properly', () => {
+        // Test that operations fail gracefully when database is closed
+        const tempDb = new DatabaseManager('./db/test-closed-db.sqlite', 'test-closed-extension');
+        const originalPath = tempDb.getDbPath();
+
+        // Close the database
+        tempDb.close();
+
+        // Check that the database is indeed closed
+        if (tempDb.isOpen()) {
+            throw new Error('Database should be closed after calling close()');
+        }
+
+        // Attempt operations on closed database - they should throw errors
+        let errorCaught = false;
+        try {
+            tempDb.upsertCharacter({id: 'closed-test', name: 'Test'});
+        } catch (e) {
+            errorCaught = true;
+        }
+        if (!errorCaught) {
+            throw new Error('Should have thrown error when upserting to closed database');
+        }
+
+        // Clean up
+        tempDb.close();
     });
 
     // Clean up after tests

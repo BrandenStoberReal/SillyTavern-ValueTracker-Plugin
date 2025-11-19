@@ -84,7 +84,7 @@ const response = await fetch('/api/plugins/valuetracker/characters', {
     },
     body: JSON.stringify({id: 'char-1', name: 'My Character'})
 });
-````
+```
 
 #### Reading Data from Other Extensions
 

@@ -4,10 +4,13 @@ All API routes are prefixed with `/api/plugins/valuetracker`.
 
 ## Important: Extension ID Header
 
-For all API endpoints (except cross-extension endpoints), the extension ID must be provided in a header rather than in
+For most API endpoints (except registration and cross-extension endpoints), the extension ID must be provided in a
+header rather than in
 the URL path:
 
 - **Header**: `x-extension-id` - The unique identifier for the extension making the request
+
+Registration endpoints require the extension ID in the request body since the extension is not yet registered.
 
 ## Table of Contents
 
@@ -24,22 +27,31 @@ the URL path:
 
 - **Endpoint**: `POST /api/plugins/valuetracker/register`
 - **Description**: Registers a new extension with the ValueTracker plugin.
-- **Headers**:
-    - `x-extension-id` (required): The unique identifier for the extension.
+- **Request Body**:
+  ```json
+  {
+    "extensionId": "string",  // Required: The unique identifier for the extension
+    "dbPath": "string"        // Optional: Path to the database file (if not using default)
+  }
+  ```
 - **Response**:
     - Success: `200 OK` with `{ "success": true, "message": "Extension {extensionId} registered successfully" }`
-    - Error: `400 Bad Request` if extension ID is missing from header
+  - Error: `400 Bad Request` if extension ID is missing from request body
     - Error: `500 Internal Server Error` with error details
 
 ### Deregister Extension
 
 - **Endpoint**: `DELETE /api/plugins/valuetracker/register`
 - **Description**: Deregisters an extension from the ValueTracker plugin.
-- **Headers**:
-    - `x-extension-id` (required): The unique identifier for the extension.
+- **Request Body**:
+  ```json
+  {
+    "extensionId": "string"   // Required: The unique identifier for the extension to deregister
+  }
+  ```
 - **Response**:
     - Success: `200 OK` with `{ "success": true, "message": "Extension {extensionId} deregistered successfully" }`
-    - Error: `400 Bad Request` if extension ID is missing from header
+  - Error: `400 Bad Request` if extension ID is missing from request body
     - Error: `500 Internal Server Error` with error details
 
 ## Character Management

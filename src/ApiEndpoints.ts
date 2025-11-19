@@ -657,9 +657,11 @@ export class ApiEndpoints {
     // Extension registration endpoints
     private registerExtension(req: Request, res: Response): void {
         try {
-            const extensionId = this.getExtensionIdFromHeader(req);
+            // For registration, extension ID comes from request body, not header, since it's not yet registered
+            const {extensionId, dbPath} = req.body;
+
             if (!extensionId) {
-                res.status(400).json({error: 'Extension ID is required in header: x-extension-id'});
+                res.status(400).json({error: 'Extension ID is required in request body'});
                 return;
             }
 
@@ -667,8 +669,6 @@ export class ApiEndpoints {
                 res.status(400).json({error: 'Valid extension ID is required (alphanumeric, hyphens, underscores only)'});
                 return;
             }
-
-            const {dbPath} = req.body;
 
             // Create a new DatabaseManager for this extension
             const dbManager = new DatabaseManager(dbPath, extensionId);
@@ -685,9 +685,11 @@ export class ApiEndpoints {
 
     private deregisterExtension(req: Request, res: Response): void {
         try {
-            const extensionId = this.getExtensionIdFromHeader(req);
+            // For deregistration, extension ID comes from request body
+            const {extensionId} = req.body;
+
             if (!extensionId) {
-                res.status(400).json({error: 'Extension ID is required in header: x-extension-id'});
+                res.status(400).json({error: 'Extension ID is required in request body'});
                 return;
             }
 

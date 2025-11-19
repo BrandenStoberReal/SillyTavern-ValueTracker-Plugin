@@ -47,6 +47,7 @@ export async function init(router: Router): Promise<void> {
     router.get('/probe', (_req, res) => {
         return res.sendStatus(204);
     });
+
     // Use body-parser to parse the request body
     router.post('/ping', jsonParser, async (req, res) => {
         try {

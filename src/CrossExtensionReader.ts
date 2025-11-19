@@ -1,6 +1,10 @@
 import {Character, FullCharacter, FullInstance, ICrossExtensionReader, Instance} from './interfaces';
 import {DatabaseManager} from './DatabaseManager';
 import {validateExtensionId} from './utils';
+import {Chalk} from 'chalk';
+
+const chalk = new Chalk();
+const MODULE_NAME = '[ValueTracker-CrossExtensionReader]';
 
 export class CrossExtensionReader implements ICrossExtensionReader {
     private extensionDatabases: Map<string, DatabaseManager> = new Map();
@@ -11,16 +15,19 @@ export class CrossExtensionReader implements ICrossExtensionReader {
     public registerExtensionDatabase(extensionId: string, dbManager: DatabaseManager): void {
         // Sanitize and validate the extension ID
         const sanitizedExtensionId = validateExtensionId(extensionId);
+        console.log(chalk.blue(MODULE_NAME), 'Registering database for extension:', sanitizedExtensionId);
 
         // Close existing database manager if it exists
         if (this.extensionDatabases.has(sanitizedExtensionId)) {
             const existingDbManager = this.extensionDatabases.get(sanitizedExtensionId);
             if (existingDbManager) {
+                console.log(chalk.yellow(MODULE_NAME), 'Closing existing database for extension:', sanitizedExtensionId);
                 existingDbManager.close();
             }
         }
 
         this.extensionDatabases.set(sanitizedExtensionId, dbManager);
+        console.log(chalk.green(MODULE_NAME), 'Database registered successfully for extension:', sanitizedExtensionId);
     }
 
     /**
@@ -49,12 +56,16 @@ export class CrossExtensionReader implements ICrossExtensionReader {
     public deregisterExtensionDatabase(extensionId: string): void {
         // Sanitize and validate the extension ID
         const sanitizedExtensionId = validateExtensionId(extensionId);
+        console.log(chalk.blue(MODULE_NAME), 'Deregistering database for extension:', sanitizedExtensionId);
 
         const dbManager = this.extensionDatabases.get(sanitizedExtensionId);
         if (dbManager) {
             // Don't close the database manager here if it's shared with other parts of the app
             // Just remove it from our map
             this.extensionDatabases.delete(sanitizedExtensionId);
+            console.log(chalk.green(MODULE_NAME), 'Database deregistered successfully for extension:', sanitizedExtensionId);
+        } else {
+            console.log(chalk.yellow(MODULE_NAME), 'Database not found for extension during deregistration:', sanitizedExtensionId);
         }
     }
 
@@ -67,8 +78,11 @@ export class CrossExtensionReader implements ICrossExtensionReader {
 
         const dbManager = this.extensionDatabases.get(sanitizedExtensionId);
         if (!dbManager) {
+            console.log(chalk.yellow(MODULE_NAME), 'Database manager not found for extension:', sanitizedExtensionId);
             return null;
         }
+
+        console.log(chalk.blue(MODULE_NAME), 'Database manager retrieved for extension:', sanitizedExtensionId);
         return dbManager;
     }
 
@@ -79,13 +93,22 @@ export class CrossExtensionReader implements ICrossExtensionReader {
         // Sanitize and validate the extension ID
         const sanitizedExtensionId = validateExtensionId(extensionId);
 
+        console.log(chalk.blue(MODULE_NAME), 'Retrieving full character:', characterId, 'from extension:', sanitizedExtensionId);
+
         const dbManager = this.getDbManager(sanitizedExtensionId);
         if (!dbManager) {
-            console.warn(`[CrossExtensionReader] Database not registered for extension: ${sanitizedExtensionId}`);
+            console.warn(chalk.yellow(MODULE_NAME), 'Database not registered for extension:', sanitizedExtensionId);
             return null;
         }
 
-        return dbManager.getFullCharacter(characterId);
+        const result = dbManager.getFullCharacter(characterId);
+        if (result) {
+            console.log(chalk.blue(MODULE_NAME), 'Successfully retrieved full character:', characterId, 'from extension:', sanitizedExtensionId);
+        } else {
+            console.log(chalk.yellow(MODULE_NAME), 'Character not found:', characterId, 'in extension:', sanitizedExtensionId);
+        }
+
+        return result;
     }
 
     /**
@@ -172,14 +195,27 @@ export class CrossExtensionReader implements ICrossExtensionReader {
      * Close all database connections
      */
     public closeAll(): void {
+        console.log(chalk.yellow(MODULE_NAME), 'Closing all extension databases');
+
+        if (this.extensionDatabases.size === 0) {
+            console.log(chalk.blue(MODULE_NAME), 'No extension databases to close');
+            return;
+        }
+
         for (const [extensionId, dbManager] of this.extensionDatabases) {
             try {
+                console.log(chalk.yellow(MODULE_NAME), 'Closing database for extension:', extensionId);
                 dbManager.close();
+                console.log(chalk.green(MODULE_NAME), 'Successfully closed database for extension:', extensionId);
             } catch (error) {
-                console.error(`[CrossExtensionReader] Error closing database for extension ${extensionId}:`, error);
+                console.error(chalk.red(MODULE_NAME), 'Error closing database for extension', extensionId + ':', error);
             }
         }
+
         // Create a new map to ensure all references are cleared
+        const closedCount = this.extensionDatabases.size;
         this.extensionDatabases = new Map();
+
+        console.log(chalk.green(MODULE_NAME), 'All extension databases closed successfully. Total:', closedCount);
     }
 }

@@ -394,7 +394,7 @@ async function runTests(): Promise<void> {
         const largeObj = {
             data: largeString,
             array: Array(1000).fill(largeString),
-            nested: {deep: {deeper: {deepest: largeString}}}
+            nested: {deep: {deeper: {deepest: largeString}}},
         };
 
         db.upsertData('instance-1', 'large-string', largeString);

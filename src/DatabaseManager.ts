@@ -1,9 +1,13 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import Database from 'better-sqlite3';
+import {Chalk} from 'chalk';
 
 import {Character, DataEntry, FullCharacter, FullInstance, Instance} from './interfaces';
 import {validateExtensionId} from './utils';
+
+const chalk = new Chalk();
+const MODULE_NAME = '[ValueTracker-DatabaseManager]';
 
 export class DatabaseManager {
     private db: Database.Database;
@@ -12,22 +16,29 @@ export class DatabaseManager {
 
     constructor(dbPath: string | undefined, extensionId: string) {
         if (!extensionId) {
+            console.error(chalk.red(MODULE_NAME), 'Extension ID is required for per-extension database');
             throw new Error('Extension ID is required for per-extension database');
         }
 
         // Sanitize and validate the extension ID
         this.extensionId = validateExtensionId(extensionId);
+        console.log(chalk.blue(MODULE_NAME), 'Creating DatabaseManager for extension:', this.extensionId);
 
         // Force the database to be created in the 'db' directory with the sanitized extension ID as filename
         if (dbPath) {
             // If a dbPath is provided, ignore it for security reasons and use the default location
-            console.warn('[DatabaseManager] dbPath argument ignored for security. Database will be created in default location.');
+            console.warn(chalk.yellow(MODULE_NAME), 'dbPath argument ignored for security. Database will be created in default location.');
         }
 
         this.dbPath = path.join(process.cwd(), 'db', `${this.extensionId}.db`);
+        console.log(chalk.blue(MODULE_NAME), 'Database path:', this.dbPath);
+
         this.ensureDirectoryExists(path.dirname(this.dbPath));
         this.db = new Database(this.dbPath);
+        console.log(chalk.blue(MODULE_NAME), 'Database connection established');
+
         this.initializeTables();
+        console.log(chalk.green(MODULE_NAME), 'Database tables initialized for extension:', this.extensionId);
     }
 
     public getExtensionId(): string {
@@ -47,11 +58,15 @@ export class DatabaseManager {
      */
     public upsertCharacter(character: Omit<Character, 'createdAt' | 'updatedAt'>): Character {
         if (!this.isOpen()) {
+            console.error(chalk.red(MODULE_NAME), 'Database is closed for extension:', this.extensionId);
             throw new Error('Database is closed');
         }
         if (!character.id) {
+            console.error(chalk.red(MODULE_NAME), 'Character ID is required for extension:', this.extensionId);
             throw new Error('Character ID is required');
         }
+
+        console.log(chalk.blue(MODULE_NAME), 'Upserting character:', character.id, 'for extension:', this.extensionId);
 
         const transaction = this.db.transaction(() => {
             const now = new Date().toISOString();
@@ -59,6 +74,7 @@ export class DatabaseManager {
 
             if (existingCharacter) {
                 // Update existing character
+                console.log(chalk.blue(MODULE_NAME), 'Updating existing character:', character.id);
                 this.db.prepare(`
                     UPDATE characters
                     SET name       = COALESCE(?, name),
@@ -67,6 +83,7 @@ export class DatabaseManager {
                 `).run(character.name, now, character.id);
             } else {
                 // Insert new character
+                console.log(chalk.blue(MODULE_NAME), 'Inserting new character:', character.id);
                 this.db.prepare(`
                     INSERT INTO characters (id, name, created_at, updated_at)
                     VALUES (?, ?, ?, ?)
@@ -77,9 +94,11 @@ export class DatabaseManager {
         });
 
         try {
-            return transaction();
+            const result = transaction();
+            console.log(chalk.green(MODULE_NAME), 'Character upserted successfully:', character.id, 'for extension:', this.extensionId);
+            return result;
         } catch (error) {
-            console.error(`[DatabaseManager] Error upserting character ${character.id}:`, error);
+            console.error(chalk.red(MODULE_NAME), 'Error upserting character', character.id, 'for extension', this.extensionId + ':', error);
             throw error;
         }
     }
@@ -104,30 +123,43 @@ export class DatabaseManager {
      */
     public deleteCharacter(id: string): boolean {
         if (!id) {
+            console.error(chalk.red(MODULE_NAME), 'Character ID is required for extension:', this.extensionId);
             throw new Error('Character ID is required');
         }
+
+        console.log(chalk.blue(MODULE_NAME), 'Deleting character:', id, 'for extension:', this.extensionId);
 
         const transaction = this.db.transaction(() => {
             // First, get all instances for this character to delete their data
             const instances = this.getInstancesByCharacter(id);
+            console.log(chalk.blue(MODULE_NAME), 'Found', instances.length, 'instances for character', id, 'to be deleted');
 
             // Delete all data for each instance
             for (const instance of instances) {
+                console.log(chalk.blue(MODULE_NAME), 'Deleting data for instance:', instance.id);
                 this.db.prepare('DELETE FROM data WHERE instance_id = ?').run(instance.id);
             }
 
             // Delete all instances for this character
+            console.log(chalk.blue(MODULE_NAME), 'Deleting instances for character:', id);
             this.db.prepare('DELETE FROM instances WHERE character_id = ?').run(id);
 
             // Finally, delete the character itself
+            console.log(chalk.blue(MODULE_NAME), 'Deleting character:', id);
             return this.db.prepare('DELETE FROM characters WHERE id = ?').run(id);
         });
 
         try {
             const result = transaction();
-            return result.changes > 0;
+            const deleted = result.changes > 0;
+            if (deleted) {
+                console.log(chalk.green(MODULE_NAME), 'Character deleted successfully:', id, 'for extension:', this.extensionId);
+            } else {
+                console.log(chalk.yellow(MODULE_NAME), 'Character not found for deletion:', id, 'for extension:', this.extensionId);
+            }
+            return deleted;
         } catch (error) {
-            console.error(`[DatabaseManager] Error deleting character ${id}:`, error);
+            console.error(chalk.red(MODULE_NAME), 'Error deleting character', id, 'for extension', this.extensionId + ':', error);
             throw error;
         }
     }
@@ -222,11 +254,15 @@ export class DatabaseManager {
      */
     public upsertData(instanceId: string, key: string, value: unknown): void {
         if (!this.isOpen()) {
+            console.error(chalk.red(MODULE_NAME), 'Database is closed for extension:', this.extensionId);
             throw new Error('Database is closed');
         }
         if (!instanceId || !key) {
+            console.error(chalk.red(MODULE_NAME), 'Instance ID and key are required for extension:', this.extensionId);
             throw new Error('Instance ID and key are required');
         }
+
+        console.log(chalk.blue(MODULE_NAME), 'Upserting data for instance:', instanceId, 'key:', key, 'value:', value, 'for extension:', this.extensionId);
 
         const transaction = this.db.transaction(() => {
             const now = new Date().toISOString();
@@ -241,8 +277,9 @@ export class DatabaseManager {
 
         try {
             transaction();
+            console.log(chalk.green(MODULE_NAME), 'Data upserted successfully for instance:', instanceId, 'key:', key, 'for extension:', this.extensionId);
         } catch (error) {
-            console.error(`[DatabaseManager] Error upserting data for instance ${instanceId}, key ${key}:`, error);
+            console.error(chalk.red(MODULE_NAME), 'Error upserting data for instance', instanceId, 'key', key, 'for extension', this.extensionId + ':', error);
             throw error;
         }
     }
@@ -376,12 +413,16 @@ export class DatabaseManager {
      * Close the database connection
      */
     public close(): void {
+        console.log(chalk.yellow(MODULE_NAME), 'Closing database connection for extension:', this.extensionId);
         try {
             if (this.db && this.db.open) { // Check if db is still open
                 this.db.close();
+                console.log(chalk.green(MODULE_NAME), 'Database connection closed successfully for extension:', this.extensionId);
+            } else {
+                console.log(chalk.blue(MODULE_NAME), 'Database was already closed for extension:', this.extensionId);
             }
         } catch (error) {
-            console.error(`[DatabaseManager] Error closing database connection:`, error);
+            console.error(chalk.red(MODULE_NAME), 'Error closing database connection for extension', this.extensionId + ':', error);
         }
     }
 
@@ -398,7 +439,10 @@ export class DatabaseManager {
      * Initialize the database tables
      */
     private initializeTables(): void {
+        console.log(chalk.blue(MODULE_NAME), 'Initializing database tables for extension:', this.extensionId);
+
         // Create characters table
+        console.log(chalk.blue(MODULE_NAME), 'Creating characters table for extension:', this.extensionId);
         this.db.exec(`
       CREATE TABLE IF NOT EXISTS characters (
         id TEXT PRIMARY KEY,
@@ -409,6 +453,7 @@ export class DatabaseManager {
     `);
 
         // Create instances table
+        console.log(chalk.blue(MODULE_NAME), 'Creating instances table for extension:', this.extensionId);
         this.db.exec(`
       CREATE TABLE IF NOT EXISTS instances (
         id TEXT PRIMARY KEY,
@@ -421,6 +466,7 @@ export class DatabaseManager {
     `);
 
         // Create data table
+        console.log(chalk.blue(MODULE_NAME), 'Creating data table for extension:', this.extensionId);
         this.db.exec(`
       CREATE TABLE IF NOT EXISTS data (
         instance_id TEXT NOT NULL,
@@ -434,7 +480,10 @@ export class DatabaseManager {
     `);
 
         // Create indexes for better performance
+        console.log(chalk.blue(MODULE_NAME), 'Creating indexes for extension:', this.extensionId);
         this.db.exec('CREATE INDEX IF NOT EXISTS idx_instances_character_id ON instances(character_id)');
         this.db.exec('CREATE INDEX IF NOT EXISTS idx_data_instance_id ON data(instance_id)');
+
+        console.log(chalk.green(MODULE_NAME), 'Database tables initialized successfully for extension:', this.extensionId);
     }
 }

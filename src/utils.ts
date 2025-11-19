@@ -72,3 +72,51 @@ export function isValidString(value: unknown): value is string {
 export function isValidObject(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
+
+/**
+ * Validates that the provided value is a valid JSON string that can be parsed
+ */
+export function isValidJsonString(value: unknown): value is string {
+    if (typeof value !== 'string') {
+        return false;
+    }
+
+    try {
+        JSON.parse(value);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * Safely parses a JSON string, returning the parsed object or null if invalid
+ */
+export function safeJsonParse(value: string): unknown | null {
+    try {
+        return JSON.parse(value);
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Validates that a request body contains expected JSON properties
+ */
+export function validateRequestBody(requiredFields: string[], body: Record<string, unknown>): {
+    isValid: boolean;
+    missingFields?: string[]
+} {
+    const missingFields: string[] = [];
+
+    for (const field of requiredFields) {
+        if (!(field in body) || body[field] === undefined || body[field] === null) {
+            missingFields.push(field);
+        }
+    }
+
+    return {
+        isValid: missingFields.length === 0,
+        missingFields: missingFields.length > 0 ? missingFields : undefined,
+    };
+}

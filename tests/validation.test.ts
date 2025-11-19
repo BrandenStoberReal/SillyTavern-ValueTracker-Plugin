@@ -27,7 +27,7 @@ function runValidationTests(): void {
             'a1',
             'a_1',
             'a-1',
-            'very_long_extension_id_with_numbers_12345'
+            'very_long_extension_id_with_numbers_12345',
         ];
 
         for (const id of validIds) {
@@ -233,7 +233,7 @@ function runValidationTests(): void {
             errorCaught = true;
         }
         if (!errorCaught) {
-            throw new Error(`validateExtensionId should reject invalid ID: ' .hidden' (gets trimmed to .hidden)`);
+            throw new Error('validateExtensionId should reject invalid ID: \' .hidden\' (gets trimmed to .hidden)');
         }
     });
 

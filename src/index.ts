@@ -40,8 +40,8 @@ export async function init(router: Router): Promise<void> {
     // Set the cross extension reader for other extensions to use
     setCrossExtensionReader(crossExtensionReader);
 
-    // Register API endpoints - SillyTavern framework will handle prefixing with plugin ID
-    router.use('/api', apiEndpoints.getRouter());
+    // Register API endpoints at root level - SillyTavern framework will handle prefixing with /api/plugins/{id}/
+    router.use('/', apiEndpoints.getRouter());
 
     // Used to check if the server plugin is running
     router.post('/probe', (_req, res) => {

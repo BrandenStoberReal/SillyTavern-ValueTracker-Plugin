@@ -1,5 +1,5 @@
-import {DatabaseManager} from '../src/DatabaseManager';
-import {CrossExtensionReader} from '../src/CrossExtensionReader';
+import {DatabaseManager} from '../src/managers/DatabaseManager';
+import {CrossExtensionReader} from '../src/core/CrossExtensionReader';
 
 // Simple test runner
 function runTest(testName: string, testFn: () => void): void {

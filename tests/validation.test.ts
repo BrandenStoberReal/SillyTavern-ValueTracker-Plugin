@@ -1,4 +1,4 @@
-import {isValidId, isValidObject, isValidString, sanitizeExtensionId, validateExtensionId} from '../src/utils';
+import {isValidId, isValidObject, isValidString, sanitizeExtensionId, validateExtensionId} from '../src/helpers/utils';
 
 // Simple test runner for validation tests
 function runValidationTest(testName: string, testFn: () => void): void {

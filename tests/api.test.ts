@@ -1,6 +1,6 @@
-import {ApiEndpoints} from '../src/ApiEndpoints';
-import {CrossExtensionReader} from '../src/CrossExtensionReader';
-import {DatabaseManager} from '../src/DatabaseManager';
+import {ApiEndpoints} from '../src/core/ApiEndpoints';
+import {CrossExtensionReader} from '../src/core/CrossExtensionReader';
+import {DatabaseManager} from '../src/managers/DatabaseManager';
 
 // Simple test runner for API tests
 function runApiTest(testName: string, testFn: () => Promise<void>): void {

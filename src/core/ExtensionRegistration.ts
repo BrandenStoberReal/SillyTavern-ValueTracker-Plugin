@@ -22,4 +22,4 @@ export type {
     FullInstance,
     Character,
     Instance,
-} from './interfaces';
+} from '../types/interfaces';

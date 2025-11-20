@@ -1,7 +1,7 @@
 import express, {Request, Response} from 'express';
-import {DatabaseManager} from './DatabaseManager';
+import {DatabaseManager} from '../managers/DatabaseManager';
 import {CrossExtensionReader} from './CrossExtensionReader';
-import {isValidId, validateRequestBody} from './utils';
+import {isValidId, validateRequestBody} from '../helpers/utils';
 import {Chalk} from 'chalk';
 
 const chalk = new Chalk();

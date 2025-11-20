@@ -1,6 +1,6 @@
-import {Character, FullCharacter, FullInstance, ICrossExtensionReader, Instance} from './interfaces';
-import {DatabaseManager} from './DatabaseManager';
-import {validateExtensionId} from './utils';
+import {Character, FullCharacter, FullInstance, ICrossExtensionReader, Instance} from '../types/interfaces';
+import {DatabaseManager} from '../managers/DatabaseManager';
+import {validateExtensionId} from '../helpers/utils';
 import {Chalk} from 'chalk';
 
 const chalk = new Chalk();

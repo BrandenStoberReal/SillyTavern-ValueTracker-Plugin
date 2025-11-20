@@ -1,9 +1,9 @@
 import bodyParser from 'body-parser';
 import {Router} from 'express';
 import {Chalk} from 'chalk';
-import {ApiEndpoints} from './ApiEndpoints';
-import {CrossExtensionReader} from './CrossExtensionReader';
-import {setCrossExtensionReader} from './ExtensionRegistration';
+import {ApiEndpoints} from './core/ApiEndpoints';
+import {CrossExtensionReader} from './core/CrossExtensionReader';
+import {setCrossExtensionReader} from './core/ExtensionRegistration';
 
 interface PluginInfo {
     id: string;

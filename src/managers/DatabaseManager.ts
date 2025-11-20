@@ -3,8 +3,8 @@ import * as path from 'path';
 import Database from 'better-sqlite3';
 import {Chalk} from 'chalk';
 
-import {Character, DataEntry, FullCharacter, FullInstance, Instance} from './interfaces';
-import {validateExtensionId} from './utils';
+import {Character, DataEntry, FullCharacter, FullInstance, Instance} from '../types/interfaces';
+import {validateExtensionId} from '../helpers/utils';
 
 const chalk = new Chalk();
 const MODULE_NAME = '[ValueTracker-DatabaseManager]';

@@ -51,14 +51,14 @@ export async function init(router: Router): Promise<void> {
 
     // Used to check if the server plugin is running
     router.get('/probe', (req, res) => {
-        console.log(chalk.blue(MODULE_NAME), 'Probe endpoint accessed from IP:', req.ip || req.connection.remoteAddress);
+        console.log(chalk.blue(MODULE_NAME), 'Probe endpoint accessed from IP:', req.ip || req.socket.remoteAddress);
         return res.sendStatus(204);
     });
 
     // Use body-parser to parse the request body
     router.post('/ping', jsonParser, async (req, res) => {
         try {
-            console.log(chalk.blue(MODULE_NAME), 'Ping endpoint accessed from IP:', req.ip || req.connection.remoteAddress);
+            console.log(chalk.blue(MODULE_NAME), 'Ping endpoint accessed from IP:', req.ip || req.socket.remoteAddress);
             const {message} = req.body;
             console.log(chalk.blue(MODULE_NAME), 'Ping received with message:', message);
             return res.json({message: `Pong! ${message}`});

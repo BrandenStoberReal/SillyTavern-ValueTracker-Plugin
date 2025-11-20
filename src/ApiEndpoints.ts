@@ -102,7 +102,7 @@ export class ApiEndpoints {
     // Character endpoints
     private getAllCharacters(req: Request, res: Response): void {
         try {
-            console.log(chalk.blue(MODULE_NAME), 'GET /characters called from IP:', req.ip || req.connection.remoteAddress);
+            console.log(chalk.blue(MODULE_NAME), 'GET /characters called from IP:', req.ip || req.socket.remoteAddress);
 
             const extensionId = this.getExtensionIdFromHeader(req);
             if (!extensionId) {
@@ -136,7 +136,7 @@ export class ApiEndpoints {
 
     private getCharacter(req: Request, res: Response): void {
         try {
-            console.log(chalk.blue(MODULE_NAME), 'GET /characters/:id called from IP:', req.ip || req.connection.remoteAddress, 'for character ID:', req.params.id);
+            console.log(chalk.blue(MODULE_NAME), 'GET /characters/:id called from IP:', req.ip || req.socket.remoteAddress, 'for character ID:', req.params.id);
 
             const extensionId = this.getExtensionIdFromHeader(req);
             if (!extensionId) {
@@ -178,7 +178,7 @@ export class ApiEndpoints {
 
     private upsertCharacter(req: Request, res: Response): void {
         try {
-            console.log(chalk.blue(MODULE_NAME), 'POST /characters called from IP:', req.ip || req.connection.remoteAddress);
+            console.log(chalk.blue(MODULE_NAME), 'POST /characters called from IP:', req.ip || req.socket.remoteAddress);
 
             const extensionId = this.getExtensionIdFromHeader(req);
             if (!extensionId) {
@@ -230,7 +230,7 @@ export class ApiEndpoints {
 
     private deleteCharacter(req: Request, res: Response): void {
         try {
-            console.log(chalk.blue(MODULE_NAME), 'DELETE /characters/:id called from IP:', req.ip || req.connection.remoteAddress, 'for character ID:', req.params.id);
+            console.log(chalk.blue(MODULE_NAME), 'DELETE /characters/:id called from IP:', req.ip || req.socket.remoteAddress, 'for character ID:', req.params.id);
 
             const extensionId = this.getExtensionIdFromHeader(req);
             if (!extensionId) {
@@ -308,7 +308,7 @@ export class ApiEndpoints {
 
     private getInstance(req: Request, res: Response): void {
         try {
-            console.log(chalk.blue(MODULE_NAME), 'GET /instances/:id called from IP:', req.ip || req.connection.remoteAddress, 'for instance ID:', req.params.id);
+            console.log(chalk.blue(MODULE_NAME), 'GET /instances/:id called from IP:', req.ip || req.socket.remoteAddress, 'for instance ID:', req.params.id);
 
             const extensionId = this.getExtensionIdFromHeader(req);
             if (!extensionId) {
@@ -379,7 +379,7 @@ export class ApiEndpoints {
 
     private upsertInstance(req: Request, res: Response): void {
         try {
-            console.log(chalk.blue(MODULE_NAME), 'POST /instances called from IP:', req.ip || req.connection.remoteAddress);
+            console.log(chalk.blue(MODULE_NAME), 'POST /instances called from IP:', req.ip || req.socket.remoteAddress);
 
             const extensionId = this.getExtensionIdFromHeader(req);
             if (!extensionId) {
@@ -422,7 +422,7 @@ export class ApiEndpoints {
             const instance = dbManager.upsertInstance({
                 id: req.body.id,
                 characterId: req.body.characterId,
-                name: name || undefined
+                name: name || undefined,
             });
             console.log(chalk.green(MODULE_NAME), 'Instance upserted successfully for ID:', req.body.id, 'in extension:', extensionId);
             res.json(instance);
@@ -470,7 +470,7 @@ export class ApiEndpoints {
     // Data endpoints
     private getInstanceData(req: Request, res: Response): void {
         try {
-            console.log(chalk.blue(MODULE_NAME), 'GET /instances/:id/data called from IP:', req.ip || req.connection.remoteAddress, 'for instance ID:', req.params.id);
+            console.log(chalk.blue(MODULE_NAME), 'GET /instances/:id/data called from IP:', req.ip || req.socket.remoteAddress, 'for instance ID:', req.params.id);
 
             const extensionId = this.getExtensionIdFromHeader(req);
             if (!extensionId) {
@@ -534,7 +534,7 @@ export class ApiEndpoints {
 
     private upsertInstanceData(req: Request, res: Response): void {
         try {
-            console.log(chalk.blue(MODULE_NAME), 'POST /instances/:id/data called from IP:', req.ip || req.connection.remoteAddress, 'for instance ID:', req.params.id);
+            console.log(chalk.blue(MODULE_NAME), 'POST /instances/:id/data called from IP:', req.ip || req.socket.remoteAddress, 'for instance ID:', req.params.id);
 
             const extensionId = this.getExtensionIdFromHeader(req);
             if (!extensionId) {
@@ -685,7 +685,7 @@ export class ApiEndpoints {
 
     private overrideInstanceData(req: Request, res: Response): void {
         try {
-            console.log(chalk.blue(MODULE_NAME), 'PUT /instances/:id/data/override called from IP:', req.ip || req.connection.remoteAddress, 'for instance ID:', req.params.id);
+            console.log(chalk.blue(MODULE_NAME), 'PUT /instances/:id/data/override called from IP:', req.ip || req.socket.remoteAddress, 'for instance ID:', req.params.id);
 
             const extensionId = this.getExtensionIdFromHeader(req);
             if (!extensionId) {
@@ -733,7 +733,7 @@ export class ApiEndpoints {
 
     private mergeInstanceData(req: Request, res: Response): void {
         try {
-            console.log(chalk.blue(MODULE_NAME), 'PUT /instances/:id/data/merge called from IP:', req.ip || req.connection.remoteAddress, 'for instance ID:', req.params.id);
+            console.log(chalk.blue(MODULE_NAME), 'PUT /instances/:id/data/merge called from IP:', req.ip || req.socket.remoteAddress, 'for instance ID:', req.params.id);
 
             const extensionId = this.getExtensionIdFromHeader(req);
             if (!extensionId) {
@@ -778,7 +778,7 @@ export class ApiEndpoints {
 
     private removeInstanceDataKeys(req: Request, res: Response): void {
         try {
-            console.log(chalk.blue(MODULE_NAME), 'PUT /instances/:id/data/remove called from IP:', req.ip || req.connection.remoteAddress, 'for instance ID:', req.params.id);
+            console.log(chalk.blue(MODULE_NAME), 'PUT /instances/:id/data/remove called from IP:', req.ip || req.socket.remoteAddress, 'for instance ID:', req.params.id);
 
             const extensionId = this.getExtensionIdFromHeader(req);
             if (!extensionId) {
@@ -843,7 +843,7 @@ export class ApiEndpoints {
     // Extension registration endpoints
     private registerExtension(req: Request, res: Response): void {
         try {
-            console.log(chalk.blue(MODULE_NAME), 'Register endpoint called from IP:', req.ip || req.connection.remoteAddress);
+            console.log(chalk.blue(MODULE_NAME), 'Register endpoint called from IP:', req.ip || req.socket.remoteAddress);
 
             // For registration, extension ID comes from request body, not header, since it's not yet registered
             const {extensionId, dbPath} = req.body;
@@ -889,7 +889,7 @@ export class ApiEndpoints {
 
     private deregisterExtension(req: Request, res: Response): void {
         try {
-            console.log(chalk.blue(MODULE_NAME), 'Deregister endpoint called from IP:', req.ip || req.connection.remoteAddress);
+            console.log(chalk.blue(MODULE_NAME), 'Deregister endpoint called from IP:', req.ip || req.socket.remoteAddress);
 
             // For deregistration, extension ID comes from request body
             const {extensionId} = req.body;

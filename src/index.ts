@@ -71,6 +71,9 @@ export async function init(router: Router): Promise<void> {
     console.log(chalk.green(MODULE_NAME), 'Plugin loaded successfully!');
 }
 
+/**
+ * Unloads and cleans up the plugin.
+ */
 export async function exit(): Promise<void> {
     console.log(chalk.yellow(MODULE_NAME), 'Plugin exit started');
 

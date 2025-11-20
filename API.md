@@ -30,8 +30,7 @@ Registration endpoints require the extension ID in the request body since the ex
 - **Request Body**:
   ```json
   {
-    "extensionId": "string",  // Required: The unique identifier for the extension
-    "dbPath": "string"        // Optional: Path to the database file (if not using default)
+    "extensionId": "string"  // Required: The unique identifier for the extension
   }
   ```
 - **Response**:

@@ -47,14 +47,19 @@ Extensions must register their database with the Value Tracker plugin via the AP
 ```
 POST /api/plugins/valuetracker/register
 Content-Type: application/json
-x-extension-id: my-extension-id
+Body: {
+  "extensionId": "string"  // Required: The unique identifier for the extension
+}
 ```
 
 **Deregister an extension:**
 
 ```
 DELETE /api/plugins/valuetracker/register
-x-extension-id: my-extension-id
+Content-Type: application/json
+Body: {
+  "extensionId": "string"  // Required: The unique identifier for the extension
+}
 ```
 
 #### Using the API

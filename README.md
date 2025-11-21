@@ -75,9 +75,10 @@ await fetch('/api/plugins/valuetracker/register', {
     method: 'POST',
     headers: {
         'Content-Type': 'application/json',
-        'x-extension-id': 'my-extension-id'
     },
-    body: "" // Body is not needed to register, but you can send it anyway if you want
+    body: {
+      "extensionId": "string"  // Required: The unique identifier for the extension
+    }
 });
 
 // Then use your extension's endpoints - note the extension ID is now in the header

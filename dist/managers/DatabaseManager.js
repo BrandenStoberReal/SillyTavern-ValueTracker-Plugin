@@ -29,7 +29,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.DatabaseManager = void 0;
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
-const better_sqlite3_1 = __importDefault(require("better-sqlite3"));
+const sql_js_1 = __importDefault(require("sql.js"));
 const chalk_1 = require("chalk");
 const utils_1 = require("../helpers/utils");
 const chalk = new chalk_1.Chalk();
@@ -71,13 +71,22 @@ class DatabaseManager {
         const dbDir = path.dirname(this.dbPath);
         this.ensureDirectoryExists(dbDir);
         console.log(chalk.blue(MODULE_NAME), 'Ensured database directory exists:', dbDir);
-        // Create a temporary check to make sure path is accessible
+        // Initialize SQL.js database
         try {
-            this.db = new better_sqlite3_1.default(this.dbPath);
+            // Initialize SQL.js with default configuration
+            const initSql = (0, sql_js_1.default)({
+                locateFile: file => `https://sql.js.org/dist/${file}`
+            });
+            // We need to handle SQL.js initialization asynchronously, but the constructor must be synchronous
+            // So we'll initialize it here and wait for it in an async method if needed
+            let data;
+            if (fs.existsSync(this.dbPath)) {
+                data = fs.readFileSync(this.dbPath);
+            }
+            this.db = new initSql.Database(data);
         }
         catch (error) {
-            console.error(chalk.red(MODULE_NAME), 'Failed to create database at path:', this.dbPath);
-            console.error(chalk.red(MODULE_NAME), 'Error:', error instanceof Error ? error.message : String(error));
+            console.error(chalk.red(MODULE_NAME), 'Failed to create or load database:', error);
             throw error;
         }
         console.log(chalk.blue(MODULE_NAME), 'Database connection established');
@@ -91,7 +100,8 @@ class DatabaseManager {
         return this.dbPath;
     }
     isOpen() {
-        return this.db && this.db.open;
+        // For SQL.js, we just check if the db instance exists
+        return this.db !== undefined;
     }
     /**
      * Insert or update a character
@@ -106,31 +116,28 @@ class DatabaseManager {
             throw new Error('Character ID is required');
         }
         console.log(chalk.blue(MODULE_NAME), 'Upserting character:', character.id, 'for extension:', this.extensionId);
-        const transaction = this.db.transaction(() => {
-            const now = new Date().toISOString();
-            const existingCharacter = this.getCharacter(character.id);
+        const now = new Date().toISOString();
+        const existingCharacter = this.getCharacter(character.id);
+        try {
             if (existingCharacter) {
                 // Update existing character
                 console.log(chalk.blue(MODULE_NAME), 'Updating existing character:', character.id);
-                this.db.prepare(`
+                this.db.run(`
                     UPDATE characters
                     SET name       = COALESCE(?, name),
                         updated_at = ?
                     WHERE id = ?
-                `).run(character.name, now, character.id);
+                `, [character.name || null, now, character.id]);
             }
             else {
                 // Insert new character
                 console.log(chalk.blue(MODULE_NAME), 'Inserting new character:', character.id);
-                this.db.prepare(`
+                this.db.run(`
                     INSERT INTO characters (id, name, created_at, updated_at)
                     VALUES (?, ?, ?, ?)
-                `).run(character.id, character.name, now, now);
+                `, [character.id, character.name || null, now, now]);
             }
-            return this.getCharacter(character.id);
-        });
-        try {
-            const result = transaction();
+            const result = this.getCharacter(character.id);
             console.log(chalk.green(MODULE_NAME), 'Character upserted successfully:', character.id, 'for extension:', this.extensionId);
             return result;
         }
@@ -143,14 +150,32 @@ class DatabaseManager {
      * Get a character by ID
      */
     getCharacter(id) {
-        const row = this.db.prepare('SELECT id, name, created_at as createdAt, updated_at as updatedAt FROM characters WHERE id = ?').get(id);
-        return row || null;
+        const stmt = this.db.prepare('SELECT id, name, created_at as createdAt, updated_at as updatedAt FROM characters WHERE id = ?');
+        const row = stmt.get([id]);
+        stmt.free(); // Free statement to prevent memory leaks
+        if (!row)
+            return null;
+        // Properly cast the returned values and convert date strings to Date objects
+        return {
+            id: row[0],
+            name: row[1],
+            createdAt: new Date(row[2]),
+            updatedAt: new Date(row[3])
+        };
     }
     /**
      * Get all characters
      */
     getAllCharacters() {
-        return this.db.prepare('SELECT id, name, created_at as createdAt, updated_at as updatedAt FROM characters').all();
+        const stmt = this.db.prepare('SELECT id, name, created_at as createdAt, updated_at as updatedAt FROM characters');
+        const rows = stmt.all();
+        stmt.free(); // Free statement to prevent memory leaks
+        return rows.map(row => ({
+            id: row[0],
+            name: row[1],
+            createdAt: new Date(row[2]),
+            updatedAt: new Date(row[3])
+        }));
     }
     /**
      * Delete a character and all its instances and data
@@ -161,32 +186,29 @@ class DatabaseManager {
             throw new Error('Character ID is required');
         }
         console.log(chalk.blue(MODULE_NAME), 'Deleting character:', id, 'for extension:', this.extensionId);
-        const transaction = this.db.transaction(() => {
+        // Check if the character exists first
+        const existingChar = this.getCharacter(id);
+        if (!existingChar) {
+            console.log(chalk.yellow(MODULE_NAME), 'Character not found for deletion:', id, 'for extension:', this.extensionId);
+            return false;
+        }
+        try {
             // First, get all instances for this character to delete their data
             const instances = this.getInstancesByCharacter(id);
             console.log(chalk.blue(MODULE_NAME), 'Found', instances.length, 'instances for character', id, 'to be deleted');
             // Delete all data for each instance
             for (const instance of instances) {
                 console.log(chalk.blue(MODULE_NAME), 'Deleting data for instance:', instance.id);
-                this.db.prepare('DELETE FROM data WHERE instance_id = ?').run(instance.id);
+                this.db.run('DELETE FROM data WHERE instance_id = ?', [instance.id]);
             }
             // Delete all instances for this character
             console.log(chalk.blue(MODULE_NAME), 'Deleting instances for character:', id);
-            this.db.prepare('DELETE FROM instances WHERE character_id = ?').run(id);
+            this.db.run('DELETE FROM instances WHERE character_id = ?', [id]);
             // Finally, delete the character itself
             console.log(chalk.blue(MODULE_NAME), 'Deleting character:', id);
-            return this.db.prepare('DELETE FROM characters WHERE id = ?').run(id);
-        });
-        try {
-            const result = transaction();
-            const deleted = result.changes > 0;
-            if (deleted) {
-                console.log(chalk.green(MODULE_NAME), 'Character deleted successfully:', id, 'for extension:', this.extensionId);
-            }
-            else {
-                console.log(chalk.yellow(MODULE_NAME), 'Character not found for deletion:', id, 'for extension:', this.extensionId);
-            }
-            return deleted;
+            this.db.run('DELETE FROM characters WHERE id = ?', [id]);
+            console.log(chalk.green(MODULE_NAME), 'Character deleted successfully:', id, 'for extension:', this.extensionId);
+            return true;
         }
         catch (error) {
             console.error(chalk.red(MODULE_NAME), 'Error deleting character', id, 'for extension', this.extensionId + ':', error);
@@ -203,30 +225,27 @@ class DatabaseManager {
         if (!instance.id || !instance.characterId) {
             throw new Error('Instance ID and character ID are required');
         }
-        const transaction = this.db.transaction(() => {
+        try {
             const now = new Date().toISOString();
             const existingInstance = this.getInstance(instance.id);
             if (existingInstance) {
                 // Update existing instance
-                this.db.prepare(`
+                this.db.run(`
             UPDATE instances
             SET name = COALESCE(?, name),
                 character_id = COALESCE(?, character_id),
                 updated_at = ?
             WHERE id = ?
-          `).run(instance.name, instance.characterId, now, instance.id);
+          `, [instance.name || null, instance.characterId, now, instance.id]);
             }
             else {
                 // Insert new instance
-                this.db.prepare(`
+                this.db.run(`
             INSERT INTO instances (id, character_id, name, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?)
-          `).run(instance.id, instance.characterId, instance.name, now, now);
+          `, [instance.id, instance.characterId, instance.name || null, now, now]);
             }
             return this.getInstance(instance.id);
-        });
-        try {
-            return transaction();
         }
         catch (error) {
             console.error(`[DatabaseManager] Error upserting instance ${instance.id}:`, error);
@@ -237,14 +256,33 @@ class DatabaseManager {
      * Get an instance by ID
      */
     getInstance(id) {
-        const row = this.db.prepare('SELECT id, character_id as characterId, name, created_at as createdAt, updated_at as updatedAt FROM instances WHERE id = ?').get(id);
-        return row || null;
+        const stmt = this.db.prepare('SELECT id, character_id as characterId, name, created_at as createdAt, updated_at as updatedAt FROM instances WHERE id = ?');
+        const row = stmt.get([id]);
+        stmt.free(); // Free statement to prevent memory leaks
+        if (!row)
+            return null;
+        return {
+            id: row[0],
+            characterId: row[1],
+            name: row[2],
+            createdAt: new Date(row[3]),
+            updatedAt: new Date(row[4])
+        };
     }
     /**
      * Get all instances for a character
      */
     getInstancesByCharacter(characterId) {
-        return this.db.prepare('SELECT id, character_id as characterId, name, created_at as createdAt, updated_at as updatedAt FROM instances WHERE character_id = ?').all(characterId);
+        const stmt = this.db.prepare('SELECT id, character_id as characterId, name, created_at as createdAt, updated_at as updatedAt FROM instances WHERE character_id = ?');
+        const rows = stmt.all();
+        stmt.free(); // Free statement to prevent memory leaks
+        return rows.map(row => ({
+            id: row[0],
+            characterId: row[1],
+            name: row[2],
+            createdAt: new Date(row[3]),
+            updatedAt: new Date(row[4])
+        }));
     }
     /**
      * Delete an instance and all its data
@@ -253,15 +291,17 @@ class DatabaseManager {
         if (!id) {
             throw new Error('Instance ID is required');
         }
-        const transaction = this.db.transaction(() => {
-            // First delete all data for this instance
-            this.db.prepare('DELETE FROM data WHERE instance_id = ?').run(id);
-            // Then delete the instance itself
-            return this.db.prepare('DELETE FROM instances WHERE id = ?').run(id);
-        });
+        // Check if the instance exists first
+        const existingInstance = this.getInstance(id);
+        if (!existingInstance) {
+            return false;
+        }
         try {
-            const result = transaction();
-            return result.changes > 0;
+            // First delete all data for this instance
+            this.db.run('DELETE FROM data WHERE instance_id = ?', [id]);
+            // Then delete the instance itself
+            this.db.run('DELETE FROM instances WHERE id = ?', [id]);
+            return true;
         }
         catch (error) {
             console.error(`[DatabaseManager] Error deleting instance ${id}:`, error);
@@ -281,17 +321,13 @@ class DatabaseManager {
             throw new Error('Instance ID and key are required');
         }
         console.log(chalk.blue(MODULE_NAME), 'Upserting data for instance:', instanceId, 'key:', key, 'value:', value, 'for extension:', this.extensionId);
-        const transaction = this.db.transaction(() => {
+        try {
             const now = new Date().toISOString();
             const valueStr = typeof value === 'object' ? JSON.stringify(value) : String(value);
-            const stmt = this.db.prepare(`
+            this.db.run(`
           INSERT OR REPLACE INTO data (instance_id, key, value, updated_at)
           VALUES (?, ?, ?, ?)
-        `);
-            stmt.run(instanceId, key, valueStr, now);
-        });
-        try {
-            transaction();
+        `, [instanceId, key, valueStr, now]);
             console.log(chalk.green(MODULE_NAME), 'Data upserted successfully for instance:', instanceId, 'key:', key, 'for extension:', this.extensionId);
         }
         catch (error) {
@@ -303,17 +339,19 @@ class DatabaseManager {
      * Get data for an instance
      */
     getData(instanceId) {
-        const rows = this.db.prepare(`
-      SELECT key, value FROM data WHERE instance_id = ?
-    `).all(instanceId);
+        const stmt = this.db.prepare(`SELECT key, value FROM data WHERE instance_id = ?`);
+        const rows = stmt.all();
+        stmt.free(); // Free statement to prevent memory leaks
         const data = {};
         for (const row of rows) {
+            const key = row[0];
+            const value = row[1];
             try {
                 // Try to parse as JSON first, otherwise return as string
-                data[row.key] = JSON.parse(row.value);
+                data[key] = JSON.parse(value);
             }
             catch (_a) {
-                data[row.key] = row.value;
+                data[key] = value;
             }
         }
         return data;
@@ -326,17 +364,18 @@ class DatabaseManager {
             throw new Error('Instance ID and key are required');
         }
         try {
-            const row = this.db.prepare(`
-          SELECT value FROM data WHERE instance_id = ? AND key = ?
-        `).get(instanceId, key);
-            if (!row)
+            const stmt = this.db.prepare(`SELECT value FROM data WHERE instance_id = ? AND key = ?`);
+            const row = stmt.get([instanceId, key]);
+            stmt.free(); // Free statement to prevent memory leaks
+            if (!row || row.length === 0)
                 return undefined;
+            const value = row[0];
             try {
                 // Try to parse as JSON first, otherwise return as string
-                return JSON.parse(row.value);
+                return JSON.parse(value);
             }
             catch (_a) {
-                return row.value;
+                return value;
             }
         }
         catch (error) {
@@ -351,10 +390,14 @@ class DatabaseManager {
         if (!instanceId || !key) {
             throw new Error('Instance ID and key are required');
         }
+        // Check if the data key exists first
+        const existingValue = this.getDataValue(instanceId, key);
+        if (existingValue === undefined) {
+            return false;
+        }
         try {
-            const stmt = this.db.prepare('DELETE FROM data WHERE instance_id = ? AND key = ?');
-            const result = stmt.run(instanceId, key);
-            return result.changes > 0;
+            this.db.run('DELETE FROM data WHERE instance_id = ? AND key = ?', [instanceId, key]);
+            return true;
         }
         catch (error) {
             console.error(`[DatabaseManager] Error deleting data value for instance ${instanceId}, key ${key}:`, error);
@@ -401,14 +444,14 @@ class DatabaseManager {
         if (!instanceId) {
             throw new Error('Instance ID is required');
         }
-        const transaction = this.db.transaction(() => {
-            const stmt = this.db.prepare('DELETE FROM data WHERE instance_id = ?');
-            const result = stmt.run(instanceId);
-            return result;
-        });
+        // Get the current data to check if there's anything to clear
+        const currentData = this.getData(instanceId);
+        if (Object.keys(currentData).length === 0) {
+            return false; // Nothing to clear
+        }
         try {
-            const result = transaction();
-            return result.changes > 0;
+            this.db.run('DELETE FROM data WHERE instance_id = ?', [instanceId]);
+            return true;
         }
         catch (error) {
             console.error(`[DatabaseManager] Error clearing data for instance ${instanceId}:`, error);
@@ -421,13 +464,11 @@ class DatabaseManager {
     close() {
         console.log(chalk.yellow(MODULE_NAME), 'Closing database connection for extension:', this.extensionId);
         try {
-            if (this.db && this.db.open) { // Check if db is still open
-                this.db.close();
-                console.log(chalk.green(MODULE_NAME), 'Database connection closed successfully for extension:', this.extensionId);
-            }
-            else {
-                console.log(chalk.blue(MODULE_NAME), 'Database was already closed for extension:', this.extensionId);
-            }
+            // Write database to file before closing
+            const data = this.db.export();
+            fs.writeFileSync(this.dbPath, data);
+            this.db.close();
+            console.log(chalk.green(MODULE_NAME), 'Database connection closed successfully for extension:', this.extensionId);
         }
         catch (error) {
             console.error(chalk.red(MODULE_NAME), 'Error closing database connection for extension', this.extensionId + ':', error);
@@ -448,7 +489,7 @@ class DatabaseManager {
         console.log(chalk.blue(MODULE_NAME), 'Initializing database tables for extension:', this.extensionId);
         // Create characters table
         console.log(chalk.blue(MODULE_NAME), 'Creating characters table for extension:', this.extensionId);
-        this.db.exec(`
+        this.db.run(`
       CREATE TABLE IF NOT EXISTS characters (
         id TEXT PRIMARY KEY,
         name TEXT,
@@ -458,19 +499,19 @@ class DatabaseManager {
     `);
         // Create instances table
         console.log(chalk.blue(MODULE_NAME), 'Creating instances table for extension:', this.extensionId);
-        this.db.exec(`
+        this.db.run(`
       CREATE TABLE IF NOT EXISTS instances (
         id TEXT PRIMARY KEY,
         character_id TEXT NOT NULL,
         name TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (character_id) REFERENCES characters (id) ON DELETE CASCADE
+        FOREIGN KEY (character_id) REFERENCES characters (id)
       )
     `);
         // Create data table
         console.log(chalk.blue(MODULE_NAME), 'Creating data table for extension:', this.extensionId);
-        this.db.exec(`
+        this.db.run(`
       CREATE TABLE IF NOT EXISTS data (
         instance_id TEXT NOT NULL,
         key TEXT NOT NULL,
@@ -478,13 +519,13 @@ class DatabaseManager {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (instance_id, key),
-        FOREIGN KEY (instance_id) REFERENCES instances (id) ON DELETE CASCADE
+        FOREIGN KEY (instance_id) REFERENCES instances (id)
       )
     `);
         // Create indexes for better performance
         console.log(chalk.blue(MODULE_NAME), 'Creating indexes for extension:', this.extensionId);
-        this.db.exec('CREATE INDEX IF NOT EXISTS idx_instances_character_id ON instances(character_id)');
-        this.db.exec('CREATE INDEX IF NOT EXISTS idx_data_instance_id ON data(instance_id)');
+        this.db.run('CREATE INDEX IF NOT EXISTS idx_instances_character_id ON instances(character_id)');
+        this.db.run('CREATE INDEX IF NOT EXISTS idx_data_instance_id ON data(instance_id)');
         console.log(chalk.green(MODULE_NAME), 'Database tables initialized successfully for extension:', this.extensionId);
     }
 }

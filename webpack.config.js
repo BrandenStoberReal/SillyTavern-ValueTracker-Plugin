@@ -35,7 +35,7 @@ module.exports = {
     plugins: [
         new CopyPlugin({
             patterns: [
-                {from: 'node_modules/sql.js/dist/sql-wasm.js', to: '.'},
+                {from: 'node_modules/sql.js/dist/sql-wasm.js', to: 'sql.js'},
                 {from: 'node_modules/sql.js/dist/sql-wasm.wasm', to: '.'},
             ],
         }),

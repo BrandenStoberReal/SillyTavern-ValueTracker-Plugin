@@ -43,7 +43,7 @@ const chalk_1 = require("chalk");
 const chalk = new chalk_1.Chalk();
 const MODULE_NAME = '[SillyTavern-ValueTracker-Plugin-Entry]';
 /**
- * Checks if better-sqlite3 is available, and installs it if not.
+ * Checks if better-sqlite3 is available, with multiple fallback strategies.
  */
 function ensureBetterSqlite3() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -51,51 +51,64 @@ function ensureBetterSqlite3() {
             // Try to require better-sqlite3
             require('better-sqlite3');
             console.log(chalk.green(MODULE_NAME), 'better-sqlite3 is available');
+            return;
         }
         catch (error) {
             console.log(chalk.yellow(MODULE_NAME), 'better-sqlite3 not found, attempting to install...');
             // Check if package.json exists in the current directory
             const packageJsonPath = path_1.default.join(__dirname, '..', 'package.json');
             if (!fs_1.default.existsSync(packageJsonPath)) {
-                const currentPackageJson = path_1.default.join(__dirname, 'package.json');
-                if (fs_1.default.existsSync(currentPackageJson)) {
-                    console.error(chalk.red(MODULE_NAME), 'package.json found in src directory, please ensure it is available in the root plugin directory.');
-                    throw new Error('package.json not found in expected location');
-                }
+                console.error(chalk.red(MODULE_NAME), 'package.json not found in expected location');
+                throw new Error('package.json not found in expected location');
             }
-            return new Promise((resolve, reject) => {
-                // Run npm install for better-sqlite3
-                const npmInstall = (0, child_process_1.spawn)('npm', ['install', 'better-sqlite3', '--no-save'], {
-                    cwd: path_1.default.join(__dirname, '..'), // Go up one level to the plugin root
-                    stdio: ['pipe', 'pipe', 'pipe']
-                });
-                npmInstall.stdout.on('data', (data) => {
-                    console.log(chalk.blue(MODULE_NAME), `npm install stdout: ${data}`);
-                });
-                npmInstall.stderr.on('data', (data) => {
-                    console.error(chalk.red(MODULE_NAME), `npm install stderr: ${data}`);
-                });
-                npmInstall.on('close', (code) => {
-                    if (code === 0) {
-                        console.log(chalk.green(MODULE_NAME), 'better-sqlite3 installed successfully');
-                        // Try to require it again to make sure it works
-                        try {
-                            require('better-sqlite3');
-                            console.log(chalk.green(MODULE_NAME), 'better-sqlite3 loaded successfully after installation');
-                            resolve();
-                        }
-                        catch (requireError) {
-                            console.error(chalk.red(MODULE_NAME), 'Failed to load better-sqlite3 after installation:', requireError);
-                            reject(requireError);
-                        }
-                    }
-                    else {
-                        console.error(chalk.red(MODULE_NAME), `npm install failed with code ${code}`);
-                        reject(new Error(`npm install failed with code ${code}`));
-                    }
-                });
-            });
+            // Try to install better-sqlite3 using npm
+            try {
+                yield installWithNpm();
+                console.log(chalk.green(MODULE_NAME), 'better-sqlite3 installed via npm');
+                // Verify that it can now be loaded
+                require('better-sqlite3');
+                console.log(chalk.green(MODULE_NAME), 'better-sqlite3 loaded successfully after npm installation');
+                return;
+            }
+            catch (npmError) {
+                console.error(chalk.red(MODULE_NAME), 'npm installation failed:', npmError);
+                // Provide clear instructions to the user
+                console.log(chalk.yellow(MODULE_NAME), 'To fix this issue, please manually install the dependency:');
+                console.log(chalk.yellow(MODULE_NAME), '1. Navigate to the plugin directory');
+                console.log(chalk.yellow(MODULE_NAME), '2. Run: npm install better-sqlite3');
+                throw new Error(`Both automatic installation and manual installation required. Error: ${npmError}`);
+            }
         }
+    });
+}
+/**
+ * Attempts to install better-sqlite3 using npm.
+ */
+function installWithNpm() {
+    return new Promise((resolve, reject) => {
+        // Run npm install for better-sqlite3
+        const npmInstall = (0, child_process_1.spawn)('npm', ['install', 'better-sqlite3', '--no-save'], {
+            cwd: path_1.default.join(__dirname, '..'), // Go up one level to the plugin root
+            stdio: ['pipe', 'pipe', 'pipe']
+        });
+        npmInstall.on('error', (err) => {
+            console.error(chalk.red(MODULE_NAME), 'Failed to start npm process:', err.message);
+            reject(new Error(`Failed to start npm process: ${err.message}`));
+        });
+        npmInstall.stdout.on('data', (data) => {
+            console.log(chalk.blue(MODULE_NAME), `npm install stdout: ${data}`);
+        });
+        npmInstall.stderr.on('data', (data) => {
+            console.error(chalk.red(MODULE_NAME), `npm install stderr: ${data}`);
+        });
+        npmInstall.on('close', (code) => {
+            if (code === 0) {
+                resolve();
+            }
+            else {
+                reject(new Error(`npm install failed with code ${code}`));
+            }
+        });
     });
 }
 /**

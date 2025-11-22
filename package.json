@@ -5,6 +5,8 @@
   "main": "src/index.ts",
   "type": "commonjs",
   "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "test": "tsx tests/database.test.ts",

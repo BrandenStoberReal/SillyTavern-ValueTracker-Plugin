@@ -13,6 +13,7 @@ module.exports = {
                 exclude: /node_modules/,
             },
         ],
+        noParse: /sql\.js/,
     },
     resolve: {
         extensions: ['.tsx', '.ts', '.js'],

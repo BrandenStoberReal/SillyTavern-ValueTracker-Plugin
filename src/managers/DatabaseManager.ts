@@ -6,7 +6,8 @@ import {Chalk} from 'chalk';
 import {Character, FullCharacter, FullInstance, Instance} from '../types/interfaces';
 import {validateExtensionId} from '../helpers/utils';
 
-const initSqlJs = require('sql.js');
+const sqlJsModule = require('sql.js');
+const initSqlJs = sqlJsModule.default || sqlJsModule;
 
 const chalk = new Chalk();
 const MODULE_NAME = '[ValueTracker-DatabaseManager]';

@@ -120,7 +120,7 @@ const specificValue = await response3.json();
 See [API.md](API.md) for complete API reference.
 
 All API operations (except cross-extension endpoints) now require an `x-extension-id` header to specify which
-extension's database to operate on. The extension ID is no longer passed in the URL path.
+extension's database to operate on.
 
 ## Arbitrary Data Support
 

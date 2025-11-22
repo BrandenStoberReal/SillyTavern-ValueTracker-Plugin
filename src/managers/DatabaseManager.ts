@@ -80,6 +80,8 @@ export class DatabaseManager {
 
         const result = await this.getCharacter(character.id);
         if (!result) throw new Error('Failed to retrieve character after upsert');
+
+        await this.flushToDisk();
         return result;
     }
 
@@ -126,6 +128,8 @@ export class DatabaseManager {
         }
         this.db.run('DELETE FROM instances WHERE character_id = ?', [id]);
         this.db.run('DELETE FROM characters WHERE id = ?', [id]);
+
+        await this.flushToDisk();
         return true;
     }
 
@@ -149,6 +153,8 @@ export class DatabaseManager {
         }
         const result = await this.getInstance(instance.id);
         if (!result) throw new Error('Failed to retrieve instance after upsert');
+
+        await this.flushToDisk();
         return result;
     }
 
@@ -193,6 +199,8 @@ export class DatabaseManager {
 
         this.db.run('DELETE FROM data WHERE instance_id = ?', [id]);
         this.db.run('DELETE FROM instances WHERE id = ?', [id]);
+
+        await this.flushToDisk();
         return true;
     }
 
@@ -207,6 +215,8 @@ export class DatabaseManager {
             'INSERT OR REPLACE INTO data (instance_id, key, value, updated_at) VALUES (?, ?, ?, ?)',
             [instanceId, key, valueStr, now]
         );
+
+        await this.flushToDisk();
     }
 
     public async getData(instanceId: string): Promise<Record<string, unknown>> {
@@ -249,6 +259,8 @@ export class DatabaseManager {
         if (existingValue === undefined) return false;
 
         this.db.run('DELETE FROM data WHERE instance_id = ? AND key = ?', [instanceId, key]);
+
+        await this.flushToDisk();
         return true;
     }
 
@@ -278,18 +290,30 @@ export class DatabaseManager {
         if (Object.keys(currentData).length === 0) return false;
 
         this.db.run('DELETE FROM data WHERE instance_id = ?', [instanceId]);
+
+        await this.flushToDisk();
         return true;
     }
 
     public async close(): Promise<void> {
         console.log(chalk.yellow(MODULE_NAME), 'Closing database connection for extension:', this.extensionId);
         try {
-            const data = this.db.export();
-            await fs.writeFile(this.dbPath, data);
+            await this.flushToDisk();
             this.db.close();
             console.log(chalk.green(MODULE_NAME), 'Database connection closed successfully.');
         } catch (error) {
             console.error(chalk.red(MODULE_NAME), 'Error closing database:', error);
+        }
+    }
+
+    private async flushToDisk(): Promise<void> {
+        try {
+            const data = this.db.export();
+            await fs.writeFile(this.dbPath, data);
+            console.log(chalk.green(MODULE_NAME), 'Database flushed to disk successfully.');
+        } catch (error) {
+            console.error(chalk.red(MODULE_NAME), 'Error flushing database to disk:', error);
+            throw error; // Re-throw the error to be handled by the caller
         }
     }
 

@@ -856,6 +856,13 @@ export class ApiEndpoints {
                 return;
             }
 
+            // Extra check to ensure extensionId is a string before we pass it to validation functions
+            if (typeof extensionId !== 'string') {
+                console.log(chalk.yellow(MODULE_NAME), 'Registration failed: extensionId must be a string, got:', typeof extensionId);
+                res.status(400).json({error: 'extensionId must be a string'});
+                return;
+            }
+
             if (!isValidId(extensionId)) {
                 console.log(chalk.yellow(MODULE_NAME), 'Registration failed: Invalid extension ID format:', extensionId);
                 res.status(400).json({error: 'Valid extension ID is required (alphanumeric, hyphens, underscores only)'});
@@ -897,6 +904,13 @@ export class ApiEndpoints {
             if (!extensionId) {
                 console.log(chalk.yellow(MODULE_NAME), 'Deregistration failed: Extension ID is required in request body');
                 res.status(400).json({error: 'Extension ID is required in request body'});
+                return;
+            }
+
+            // Extra check to ensure extensionId is a string before we pass it to validation functions
+            if (typeof extensionId !== 'string') {
+                console.log(chalk.yellow(MODULE_NAME), 'Deregistration failed: extensionId must be a string, got:', typeof extensionId);
+                res.status(400).json({error: 'extensionId must be a string'});
                 return;
             }
 

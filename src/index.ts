@@ -80,7 +80,7 @@ export async function exit(): Promise<void> {
 
     // Close cross-extension reader
     if (crossExtensionReader) {
-        crossExtensionReader.closeAll();
+        await crossExtensionReader.closeAll();
         console.log(chalk.yellow(MODULE_NAME), 'All extension databases closed');
     }
 

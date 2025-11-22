@@ -48,15 +48,15 @@ export interface DatabaseConfig {
  * Interface for cross-extension reading functionality
  */
 export interface ICrossExtensionReader {
-    getFullCharacter(extensionId: string, characterId: string): FullCharacter | null;
+    getFullCharacter(extensionId: string, characterId: string): Promise<FullCharacter | null>;
 
-    getFullInstance(extensionId: string, instanceId: string): FullInstance | null;
+    getFullInstance(extensionId: string, instanceId: string): Promise<FullInstance | null>;
 
-    getInstanceData(extensionId: string, instanceId: string): Record<string, unknown>;
+    getInstanceData(extensionId: string, instanceId: string): Promise<Record<string, unknown>>;
 
-    getDataValue(extensionId: string, instanceId: string, key: string): unknown;
+    getDataValue(extensionId: string, instanceId: string, key: string): Promise<unknown>;
 
-    getAllCharacters(extensionId: string): Character[];
+    getAllCharacters(extensionId: string): Promise<Character[]>;
 
-    getInstancesByCharacter(extensionId: string, characterId: string): Instance[];
+    getInstancesByCharacter(extensionId: string, characterId: string): Promise<Instance[]>;
 }

@@ -1,4 +1,5 @@
 const path = require('path');
+const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
     entry: './src/index.ts',
@@ -31,6 +32,13 @@ module.exports = {
         'crypto': 'commonjs crypto',
         // sql.js will be included in the bundle since it's a pure JavaScript library
     },
+    plugins: [
+        new CopyPlugin({
+            patterns: [
+                {from: 'node_modules/sql.js/dist/sql-wasm.wasm', to: '.'},
+            ],
+        }),
+    ],
     optimization: {
         minimize: true, // Enable minimization for production
         usedExports: true, // Enable tree-shaking

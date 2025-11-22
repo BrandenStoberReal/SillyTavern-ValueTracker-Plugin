@@ -13,7 +13,6 @@ module.exports = {
                 exclude: /node_modules/,
             },
         ],
-        noParse: /sql\.js/,
     },
     resolve: {
         extensions: ['.tsx', '.ts', '.js'],
@@ -31,11 +30,12 @@ module.exports = {
         'fs': 'commonjs fs',
         'path': 'commonjs path',
         'crypto': 'commonjs crypto',
-        // sql.js will be included in the bundle since it's a pure JavaScript library
+        'sql.js': 'commonjs sql.js'
     },
     plugins: [
         new CopyPlugin({
             patterns: [
+                {from: 'node_modules/sql.js/dist/sql-wasm.js', to: '.'},
                 {from: 'node_modules/sql.js/dist/sql-wasm.wasm', to: '.'},
             ],
         }),

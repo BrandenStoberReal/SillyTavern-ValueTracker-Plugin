@@ -33,18 +33,12 @@ export class DatabaseManager {
 
         if (!DatabaseManager.SQL) {
             console.log(chalk.blue(MODULE_NAME), 'Initializing SQL.js...');
-            // When using webpack, the wasm file will be copied to the dist folder.
-            // __dirname will point to the dist folder at runtime.
-            const wasmPath = path.join(__dirname, 'sql-wasm.wasm');
-            console.log(chalk.blue(MODULE_NAME), `Loading WASM from: ${wasmPath}`);
-
             try {
-                const wasmBinary = new Uint8Array(await fs.readFile(wasmPath));
-                DatabaseManager.SQL = await initSqlJs({wasmBinary: wasmBinary.buffer});
+                DatabaseManager.SQL = await initSqlJs();
                 console.log(chalk.green(MODULE_NAME), 'SQL.js initialized successfully.');
             } catch (error) {
                 console.error(chalk.red(MODULE_NAME), 'Failed to initialize SQL.js:', error);
-                throw new Error(`Could not load sql-wasm.wasm from ${wasmPath}. Make sure it's included in your build.`);
+                throw new Error(`Could not initialize sql.js. Make sure sql-wasm.js and sql-wasm.wasm are in the dist directory.`);
             }
         }
 

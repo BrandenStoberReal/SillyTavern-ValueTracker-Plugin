@@ -889,7 +889,9 @@ export class ApiEndpoints {
             res.json({success: true, message: `Extension ${extensionId} registered successfully`});
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            const errorStack = error instanceof Error ? error.stack : 'No stack trace available';
             console.error(chalk.red(MODULE_NAME), 'Registration failed with error:', errorMessage);
+            console.error(chalk.red(MODULE_NAME), 'Stack trace:', errorStack);
             res.status(500).json({error: errorMessage});
         }
     }
@@ -929,7 +931,9 @@ export class ApiEndpoints {
             res.json({success: true, message: `Extension ${extensionId} deregistered successfully`});
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            const errorStack = error instanceof Error ? error.stack : 'No stack trace available';
             console.error(chalk.red(MODULE_NAME), 'Deregistration failed with error:', errorMessage);
+            console.error(chalk.red(MODULE_NAME), 'Stack trace:', errorStack);
             res.status(500).json({error: errorMessage});
         }
     }

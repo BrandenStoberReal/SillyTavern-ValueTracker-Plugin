@@ -3,6 +3,11 @@
  * Removes or replaces potentially dangerous characters
  */
 export function sanitizeExtensionId(extensionId: string): string {
+    // Ensure extensionId is a string before proceeding
+    if (typeof extensionId !== 'string') {
+        throw new Error(`Extension ID must be a string, got ${typeof extensionId}`);
+    }
+
     if (extensionId === undefined || extensionId === null) {
         throw new Error('Extension ID cannot be undefined or null');
     }
@@ -32,6 +37,11 @@ export function sanitizeExtensionId(extensionId: string): string {
  * Validates that the extension ID is safe to use
  */
 export function validateExtensionId(extensionId: string): string {
+    // Ensure extensionId is a string before proceeding
+    if (typeof extensionId !== 'string') {
+        throw new Error(`Extension ID must be a string, got ${typeof extensionId}`);
+    }
+
     // Check if extensionId is provided
     if (extensionId === undefined || extensionId === null) {
         throw new Error('Extension ID cannot be undefined or null');

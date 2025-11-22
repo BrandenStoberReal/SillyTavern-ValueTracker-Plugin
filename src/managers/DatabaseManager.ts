@@ -20,6 +20,12 @@ export class DatabaseManager {
             throw new Error('Extension ID is required for per-extension database');
         }
 
+        // Ensure extensionId is a string before passing to validation
+        if (typeof extensionId !== 'string') {
+            console.error(chalk.red(MODULE_NAME), `Extension ID must be a string, got ${typeof extensionId}`);
+            throw new Error(`Extension ID must be a string, got ${typeof extensionId}`);
+        }
+
         // Sanitize and validate the extension ID
         this.extensionId = validateExtensionId(extensionId);
         console.log(chalk.blue(MODULE_NAME), 'Creating DatabaseManager for extension:', this.extensionId);

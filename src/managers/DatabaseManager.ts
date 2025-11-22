@@ -36,8 +36,20 @@ export class DatabaseManager {
             console.warn(chalk.yellow(MODULE_NAME), 'dbPath argument ignored for security. Database will be created in default location.');
         }
 
+        // Double-check that extensionId is valid before creating dbPath
+        if (!this.extensionId) {
+            console.error(chalk.red(MODULE_NAME), 'Extension ID is empty after validation, cannot create database path');
+            throw new Error('Extension ID is empty after validation');
+        }
+
         this.dbPath = path.join(process.cwd(), 'db', `${this.extensionId}.db`);
         console.log(chalk.blue(MODULE_NAME), 'Database path:', this.dbPath);
+
+        // Ensure dbPath is a proper string before creating the database
+        if (typeof this.dbPath !== 'string' || !this.dbPath) {
+            console.error(chalk.red(MODULE_NAME), 'Database path is not a valid string:', this.dbPath);
+            throw new Error('Database path is not a valid string');
+        }
 
         this.ensureDirectoryExists(path.dirname(this.dbPath));
         this.db = new Database(this.dbPath);

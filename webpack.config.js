@@ -30,7 +30,7 @@ module.exports = {
         'fs': 'commonjs fs',
         'path': 'commonjs path',
         'crypto': 'commonjs crypto',
-        'sql.js': 'commonjs sql.js'
+        'sql.js': 'commonjs ./sql.js'
     },
     plugins: [
         new CopyPlugin({

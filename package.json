@@ -2,7 +2,7 @@
   "name": "plugin-value-tracker",
   "version": "1.0.0",
   "description": "Tracks and manages various character data intelligently.",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
   "type": "commonjs",
   "scripts": {
     "build": "tsc",

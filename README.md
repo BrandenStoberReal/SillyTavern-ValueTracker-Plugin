@@ -4,6 +4,29 @@ This plugin provides a per-extension SQLite-based storage system for tracking ch
 SillyTavern. Each extension manages its own database file, with a complete API for managing characters, instances, and
 arbitrary data storage.
 
+## Installation
+
+1. Copy the plugin folder to your SillyTavern plugins directory
+2. Navigate to the plugin directory in your command line
+3. Run `npm install` to install all dependencies including the native SQLite module
+4. Restart SillyTavern
+
+### Automated Installation (Alternative)
+
+If you're comfortable using command line, you can use this one-liner after copying the plugin folder:
+
+On Windows:
+
+```
+cd "path/to/your/SillyTavern/plugins/SillyTavern-ValueTracker-Plugin" && npm install
+```
+
+On Linux/Mac:
+
+```
+cd "path/to/your/SillyTavern/plugins/SillyTavern-ValueTracker-Plugin" && npm install
+```
+
 ## Features
 
 - Per-extension SQLite database storage for persistent data

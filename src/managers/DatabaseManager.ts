@@ -1,10 +1,12 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import initSqlJs, {Database as SqlJsDatabase, SqlJsStatic} from 'sql.js';
+import {Database as SqlJsDatabase, SqlJsStatic} from 'sql.js';
 import {Chalk} from 'chalk';
 
 import {Character, FullCharacter, FullInstance, Instance} from '../types/interfaces';
 import {validateExtensionId} from '../helpers/utils';
+
+const initSqlJs = require('sql.js');
 
 const chalk = new Chalk();
 const MODULE_NAME = '[ValueTracker-DatabaseManager]';

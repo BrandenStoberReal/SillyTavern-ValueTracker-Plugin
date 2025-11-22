@@ -3,6 +3,10 @@
  * Removes or replaces potentially dangerous characters
  */
 export function sanitizeExtensionId(extensionId: string): string {
+    if (extensionId === undefined || extensionId === null) {
+        throw new Error('Extension ID cannot be undefined or null');
+    }
+
     if (!extensionId) {
         throw new Error('Extension ID cannot be empty');
     }
@@ -28,6 +32,11 @@ export function sanitizeExtensionId(extensionId: string): string {
  * Validates that the extension ID is safe to use
  */
 export function validateExtensionId(extensionId: string): string {
+    // Check if extensionId is provided
+    if (extensionId === undefined || extensionId === null) {
+        throw new Error('Extension ID cannot be undefined or null');
+    }
+
     const sanitized = sanitizeExtensionId(extensionId);
 
     // Trim whitespace after sanitization

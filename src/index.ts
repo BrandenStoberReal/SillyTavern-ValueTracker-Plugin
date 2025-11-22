@@ -19,6 +19,7 @@ interface Plugin {
 
 const chalk = new Chalk();
 const MODULE_NAME = '[SillyTavern-ValueTracker-Plugin]';
+
 let crossExtensionReader: CrossExtensionReader;
 let apiEndpoints: ApiEndpoints;
 

@@ -42,6 +42,8 @@ export class DatabaseManager {
             throw new Error('Extension ID is empty after validation');
         }
 
+        // Use the directory structure relative to SillyTavern's expected location
+        // SillyTavern typically has a "db" directory in its root
         this.dbPath = path.join(process.cwd(), 'db', `${this.extensionId}.db`);
         console.log(chalk.blue(MODULE_NAME), 'Database path:', this.dbPath);
 
@@ -51,8 +53,19 @@ export class DatabaseManager {
             throw new Error('Database path is not a valid string');
         }
 
-        this.ensureDirectoryExists(path.dirname(this.dbPath));
-        this.db = new Database(this.dbPath);
+        // Ensure the directory exists before creating the database
+        const dbDir = path.dirname(this.dbPath);
+        this.ensureDirectoryExists(dbDir);
+        console.log(chalk.blue(MODULE_NAME), 'Ensured database directory exists:', dbDir);
+
+        // Create a temporary check to make sure path is accessible
+        try {
+            this.db = new Database(this.dbPath);
+        } catch (error) {
+            console.error(chalk.red(MODULE_NAME), 'Failed to create database at path:', this.dbPath);
+            console.error(chalk.red(MODULE_NAME), 'Error:', error instanceof Error ? error.message : String(error));
+            throw error;
+        }
         console.log(chalk.blue(MODULE_NAME), 'Database connection established');
 
         this.initializeTables();

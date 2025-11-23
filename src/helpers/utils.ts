@@ -17,7 +17,12 @@ export function sanitizeExtensionId(extensionId: string): string {
     }
 
     // Remove any path traversal sequences
-    let sanitized = extensionId.replace(/\.\.\//g, '').replace(/\.\.\\/g, '');
+    let sanitized = extensionId;
+    let prevSanitized;
+    do {
+        prevSanitized = sanitized;
+        sanitized = sanitized.replace(/\.\.\//g, '').replace(/\.\.\\/g, '');
+    } while (sanitized !== prevSanitized);
 
     // Remove potentially dangerous characters for filenames
     sanitized = sanitized.replace(/[<>:"/\\|?*]/g, '_');

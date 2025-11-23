@@ -79,6 +79,7 @@ Example using fetch:
 await fetch('/api/plugins/valuetracker/register', {
     method: 'POST',
     headers: {
+        ...context.getRequestHeaders(),  // Include standard ST authentication headers
         'Content-Type': 'application/json',
     },
     body: {
@@ -90,6 +91,7 @@ await fetch('/api/plugins/valuetracker/register', {
 const response = await fetch('/api/plugins/valuetracker/characters', {
     method: 'POST',
     headers: {
+        ...context.getRequestHeaders(),  // Include standard ST authentication headers
         'Content-Type': 'application/json',
         'x-extension-id': 'my-extension-id'
     },

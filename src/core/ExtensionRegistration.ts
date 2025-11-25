@@ -1,4 +1,4 @@
-import {CrossExtensionReader} from './CrossExtensionReader';
+import { CrossExtensionReader } from './CrossExtensionReader';
 
 // Singleton instance of the CrossExtensionReader
 let crossExtensionReader: CrossExtensionReader;

@@ -1,4 +1,4 @@
-import { isValidId, isValidObject, isValidString, sanitizeExtensionId, validateExtensionId } from '../src/helpers/utils';
+import {isValidId, isValidObject, isValidString, sanitizeExtensionId, validateExtensionId} from '../src/helpers/utils';
 
 // Simple test runner for validation tests
 function runValidationTest(testName: string, testFn: () => void): void {
@@ -104,10 +104,10 @@ function runValidationTests(): void {
     runValidationTest('Validation: isValidObject should return true for valid objects', () => {
         const validObjects = [
             {},
-            { key: 'value' },
-            { nested: { obj: 'value' } },
-            { array: [1, 2, 3] },
-            { number: 123, boolean: true, nullVal: null },
+            {key: 'value'},
+            {nested: {obj: 'value'}},
+            {array: [1, 2, 3]},
+            {number: 123, boolean: true, nullVal: null},
         ];
 
         for (const obj of validObjects) {
@@ -140,10 +140,10 @@ function runValidationTests(): void {
     // Test sanitizeExtensionId function
     runValidationTest('Validation: sanitizeExtensionId should sanitize path traversal', () => {
         const testCases = [
-            { input: '../extension', expected: 'extension' }, // ../ should be removed
-            { input: '..\\extension', expected: 'extension' }, // ..\ should be removed
-            { input: 'ext/../extension', expected: 'ext_extension' }, // ../ should be replaced with _
-            { input: 'ext\\..\\extension', expected: 'ext_extension' }, // ..\ should be replaced with _
+            {input: '../extension', expected: 'extension'}, // ../ should be removed
+            {input: '..\\extension', expected: 'extension'}, // ..\ should be removed
+            {input: 'ext/../extension', expected: 'ext_extension'}, // ../ should be replaced with _
+            {input: 'ext\\..\\extension', expected: 'ext_extension'}, // ..\ should be replaced with _
         ];
 
         for (const testCase of testCases) {

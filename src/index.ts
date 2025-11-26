@@ -1,9 +1,9 @@
 import bodyParser from 'body-parser';
-import { Router } from 'express';
-import { Chalk } from 'chalk';
-import { ApiEndpoints } from './core/ApiEndpoints';
-import { CrossExtensionReader } from './core/CrossExtensionReader';
-import { setCrossExtensionReader } from './core/ExtensionRegistration';
+import {Router} from 'express';
+import {Chalk} from 'chalk';
+import {ApiEndpoints} from './core/ApiEndpoints';
+import {CrossExtensionReader} from './core/CrossExtensionReader';
+import {setCrossExtensionReader} from './core/ExtensionRegistration';
 
 interface PluginInfo {
     id: string;
@@ -60,9 +60,9 @@ export async function init(router: Router): Promise<void> {
     router.post('/ping', jsonParser, async (req, res) => {
         try {
             console.log(chalk.blue(MODULE_NAME), 'Ping endpoint accessed from IP:', req.ip || req.socket.remoteAddress);
-            const { message } = req.body;
+            const {message} = req.body;
             console.log(chalk.blue(MODULE_NAME), 'Ping received with message:', message);
-            return res.json({ message: `Pong! ${message}` });
+            return res.json({message: `Pong! ${message}`});
         } catch (error) {
             console.error(chalk.red(MODULE_NAME), 'Ping request failed', error);
             return res.status(500).send('Internal Server Error');

@@ -1,7 +1,7 @@
-import { Character, FullCharacter, FullInstance, ICrossExtensionReader, Instance } from '../types/interfaces';
-import { DatabaseManager } from '../managers/DatabaseManager';
-import { validateExtensionId } from '../helpers/utils';
-import { Chalk } from 'chalk';
+import {Character, FullCharacter, FullInstance, ICrossExtensionReader, Instance} from '../types/interfaces';
+import {DatabaseManager} from '../managers/DatabaseManager';
+import {validateExtensionId} from '../helpers/utils';
+import {Chalk} from 'chalk';
 
 const chalk = new Chalk();
 const MODULE_NAME = '[ValueTracker-CrossExtensionReader]';

@@ -1,5 +1,5 @@
-import { DatabaseManager } from '../src/managers/DatabaseManager';
-import { CrossExtensionReader } from '../src/core/CrossExtensionReader';
+import {DatabaseManager} from '../src/managers/DatabaseManager';
+import {CrossExtensionReader} from '../src/core/CrossExtensionReader';
 
 // Simple test runner
 function runTest(testName: string, testFn: () => void): void {
@@ -31,7 +31,7 @@ async function runTests(): Promise<void> {
     cleanup(db);
 
     runTest('Should create and retrieve a character', () => {
-        const character = db.upsertCharacter({ id: 'char-1', name: 'Test Character' });
+        const character = db.upsertCharacter({id: 'char-1', name: 'Test Character'});
         const retrieved = db.getCharacter('char-1');
 
         if (!retrieved) throw new Error('Character not found after creation');
@@ -171,7 +171,7 @@ async function runTests(): Promise<void> {
 
     runTest('Should handle deleting a character and its instances/data', () => {
         // Create a second character and instance for this test
-        db.upsertCharacter({ id: 'char-delete-test', name: 'Delete Test Character' });
+        db.upsertCharacter({id: 'char-delete-test', name: 'Delete Test Character'});
         db.upsertInstance({
             id: 'instance-delete-test',
             characterId: 'char-delete-test',
@@ -191,8 +191,8 @@ async function runTests(): Promise<void> {
 
     runTest('Should handle large amounts of data', () => {
         // Create a new character and instance for this test
-        db.upsertCharacter({ id: 'stress-test', name: 'Stress Test Character' });
-        db.upsertInstance({ id: 'stress-instance', characterId: 'stress-test', name: 'Stress Test Instance' });
+        db.upsertCharacter({id: 'stress-test', name: 'Stress Test Character'});
+        db.upsertInstance({id: 'stress-instance', characterId: 'stress-test', name: 'Stress Test Instance'});
 
         // Add many data entries to test performance and limits
         for (let i = 0; i < 100; i++) {
@@ -278,7 +278,7 @@ async function runTests(): Promise<void> {
         crossExtensionReader.registerExtensionDatabase('test-extension-2', db2);
 
         // Verify it's registered by creating a character in it
-        db2.upsertCharacter({ id: 'char-2', name: 'Test Character 2' });
+        db2.upsertCharacter({id: 'char-2', name: 'Test Character 2'});
         const charFromReader = crossExtensionReader.getFullCharacter('test-extension-2', 'char-2');
         if (!charFromReader || charFromReader.character.id !== 'char-2') {
             throw new Error('Character not accessible through registered extension');
@@ -302,7 +302,7 @@ async function runTests(): Promise<void> {
         // Test upserting without required ID
         let errorCaught = false;
         try {
-            db.upsertCharacter({ id: '', name: 'Invalid Character' });
+            db.upsertCharacter({id: '', name: 'Invalid Character'});
         } catch (e) {
             errorCaught = true;
         }
@@ -313,7 +313,7 @@ async function runTests(): Promise<void> {
         // Test upserting instance without required fields
         errorCaught = false;
         try {
-            db.upsertInstance({ id: '', characterId: 'char-1', name: 'Invalid Instance' });
+            db.upsertInstance({id: '', characterId: 'char-1', name: 'Invalid Instance'});
         } catch (e) {
             errorCaught = true;
         }
@@ -324,7 +324,7 @@ async function runTests(): Promise<void> {
         // Test upserting instance without characterId
         errorCaught = false;
         try {
-            db.upsertInstance({ id: 'instance-no-char', characterId: '', name: 'Invalid Instance' });
+            db.upsertInstance({id: 'instance-no-char', characterId: '', name: 'Invalid Instance'});
         } catch (e) {
             errorCaught = true;
         }
@@ -390,7 +390,7 @@ async function runTests(): Promise<void> {
         const largeObj = {
             data: largeString,
             array: Array(1000).fill(largeString),
-            nested: { deep: { deeper: { deepest: largeString } } },
+            nested: {deep: {deeper: {deepest: largeString}}},
         };
 
         db.upsertData('instance-1', 'large-string', largeString);
@@ -422,7 +422,7 @@ async function runTests(): Promise<void> {
         // Attempt operations on closed database - they should throw errors
         let errorCaught = false;
         try {
-            tempDb.upsertCharacter({ id: 'closed-test', name: 'Test' });
+            tempDb.upsertCharacter({id: 'closed-test', name: 'Test'});
         } catch (e) {
             errorCaught = true;
         }

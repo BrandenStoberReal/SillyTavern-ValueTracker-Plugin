@@ -36,7 +36,7 @@ Registration endpoints require the extension ID in the request body since the ex
 - **Response**:
     - Success: `200 OK` with `{ "success": true, "message": "Extension {extensionId} registered successfully" }`
   - Error: `400 Bad Request` if extension ID is missing from request body
-    - Error: `500 Internal Server Error` with error details
+      - Error: `500 Internal Server Error` with error details
 
 ### Deregister Extension
 
@@ -51,7 +51,7 @@ Registration endpoints require the extension ID in the request body since the ex
 - **Response**:
     - Success: `200 OK` with `{ "success": true, "message": "Extension {extensionId} deregistered successfully" }`
   - Error: `400 Bad Request` if extension ID is missing from request body
-    - Error: `500 Internal Server Error` with error details
+      - Error: `500 Internal Server Error` with error details
 
 ## Character Management
 

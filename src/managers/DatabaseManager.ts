@@ -1,10 +1,10 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { Database as SqlJsDatabase, SqlJsStatic } from 'sql.js';
-import { Chalk } from 'chalk';
+import {Database as SqlJsDatabase, SqlJsStatic} from 'sql.js';
+import {Chalk} from 'chalk';
 
-import { Character, FullCharacter, FullInstance, Instance } from '../types/interfaces';
-import { validateExtensionId } from '../helpers/utils';
+import {Character, FullCharacter, FullInstance, Instance} from '../types/interfaces';
+import {validateExtensionId} from '../helpers/utils';
 
 const sqlJsModule = require('sql.js');
 const initSqlJs = sqlJsModule.default || sqlJsModule;
@@ -87,7 +87,7 @@ export class DatabaseManager {
 
     public async getCharacter(id: string): Promise<Character | null> {
         const stmt = this.db.prepare('SELECT id, name, created_at, updated_at FROM characters WHERE id = ?');
-        const row = stmt.getAsObject({ ':id': id });
+        const row = stmt.getAsObject({':id': id});
         stmt.free();
 
         if (Object.keys(row).length === 0) return null;
@@ -160,7 +160,7 @@ export class DatabaseManager {
 
     public async getInstance(id: string): Promise<Instance | null> {
         const stmt = this.db.prepare('SELECT id, character_id, name, created_at, updated_at FROM instances WHERE id = ?');
-        const row = stmt.getAsObject({ ':id': id });
+        const row = stmt.getAsObject({':id': id});
         stmt.free();
 
         if (Object.keys(row).length === 0) return null;
@@ -240,7 +240,7 @@ export class DatabaseManager {
     public async getDataValue(instanceId: string, key: string): Promise<unknown> {
         if (!instanceId || !key) throw new Error('Instance ID and key are required');
         const stmt = this.db.prepare('SELECT value FROM data WHERE instance_id = ? AND key = ?');
-        const row = stmt.getAsObject({ ':instance_id': instanceId, ':key': key });
+        const row = stmt.getAsObject({':instance_id': instanceId, ':key': key});
         stmt.free();
 
         if (!row || !row.value) return undefined;
@@ -271,17 +271,17 @@ export class DatabaseManager {
         const instances = await this.getInstancesByCharacter(id);
         const fullInstances: FullInstance[] = await Promise.all(instances.map(async (instance) => {
             const data = await this.getData(instance.id);
-            return { instance, data };
+            return {instance, data};
         }));
 
-        return { character, instances: fullInstances };
+        return {character, instances: fullInstances};
     }
 
     public async getFullInstance(id: string): Promise<FullInstance | null> {
         const instance = await this.getInstance(id);
         if (!instance) return null;
         const data = await this.getData(id);
-        return { instance, data };
+        return {instance, data};
     }
 
     public async clearInstanceData(instanceId: string): Promise<boolean> {
@@ -344,7 +344,7 @@ export class DatabaseManager {
 
     private async ensureDirectoryExists(dirPath: string): Promise<void> {
         try {
-            await fs.mkdir(dirPath, { recursive: true });
+            await fs.mkdir(dirPath, {recursive: true});
         } catch (error: any) {
             if (error.code !== 'EEXIST') {
                 throw error;

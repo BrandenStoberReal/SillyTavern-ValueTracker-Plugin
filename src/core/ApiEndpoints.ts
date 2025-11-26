@@ -1,7 +1,7 @@
-import express, { Request, Response } from 'express';
-import { CrossExtensionReader } from './CrossExtensionReader';
-import { isValidId } from '../helpers/utils';
-import { Chalk } from 'chalk';
+import express, {Request, Response} from 'express';
+import {CrossExtensionReader} from './CrossExtensionReader';
+import {isValidId} from '../helpers/utils';
+import {Chalk} from 'chalk';
 
 const chalk = new Chalk();
 const MODULE_NAME = '[ValueTracker-ApiEndpoints]';
@@ -18,13 +18,13 @@ export class ApiEndpoints {
         console.log(chalk.green(MODULE_NAME), 'API endpoints initialized successfully');
     }
 
+    getRouter(): express.Router {
+        return this.router;
+    }
+
     private getExtensionIdFromHeader(req: Request): string | null {
         const extensionId = req.headers['x-extension-id'] as string;
         return extensionId || null;
-    }
-
-    getRouter(): express.Router {
-        return this.router;
     }
 
     private setupRoutes(): void {
@@ -68,13 +68,13 @@ export class ApiEndpoints {
         try {
             const extensionId = this.getExtensionIdFromHeader(req);
             if (!extensionId || !isValidId(extensionId)) {
-                res.status(400).json({ error: 'Valid extension ID is required in header: x-extension-id' });
+                res.status(400).json({error: 'Valid extension ID is required in header: x-extension-id'});
                 return;
             }
 
             const dbManager = this.crossExtensionReader.getDbManager(extensionId);
             if (!dbManager) {
-                res.status(404).json({ error: `Database not found for extension: ${extensionId}` });
+                res.status(404).json({error: `Database not found for extension: ${extensionId}`});
                 return;
             }
 
@@ -82,7 +82,7 @@ export class ApiEndpoints {
             res.json(characters);
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            res.status(500).json({ error: errorMessage });
+            res.status(500).json({error: errorMessage});
         }
     }
 
@@ -90,31 +90,31 @@ export class ApiEndpoints {
         try {
             const extensionId = this.getExtensionIdFromHeader(req);
             if (!extensionId) {
-                res.status(400).json({ error: 'Extension ID is required in header: x-extension-id' });
+                res.status(400).json({error: 'Extension ID is required in header: x-extension-id'});
                 return;
             }
 
-            const { id } = req.params;
+            const {id} = req.params;
             if (!isValidId(id)) {
-                res.status(400).json({ error: 'Valid character ID is required' });
+                res.status(400).json({error: 'Valid character ID is required'});
                 return;
             }
 
             const dbManager = this.crossExtensionReader.getDbManager(extensionId);
             if (!dbManager) {
-                res.status(404).json({ error: `Database not found for extension: ${extensionId}` });
+                res.status(404).json({error: `Database not found for extension: ${extensionId}`});
                 return;
             }
 
             const character = await dbManager.getFullCharacter(id);
             if (!character) {
-                res.status(404).json({ error: 'Character not found' });
+                res.status(404).json({error: 'Character not found'});
                 return;
             }
             res.json(character);
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            res.status(500).json({ error: errorMessage });
+            res.status(500).json({error: errorMessage});
         }
     }
 
@@ -122,27 +122,27 @@ export class ApiEndpoints {
         try {
             const extensionId = this.getExtensionIdFromHeader(req);
             if (!extensionId) {
-                res.status(400).json({ error: 'Extension ID is required in header: x-extension-id' });
+                res.status(400).json({error: 'Extension ID is required in header: x-extension-id'});
                 return;
             }
 
-            const { id, name } = req.body;
+            const {id, name} = req.body;
             if (!id || !isValidId(id)) {
-                res.status(400).json({ error: 'Valid character ID is required in body' });
+                res.status(400).json({error: 'Valid character ID is required in body'});
                 return;
             }
 
             const dbManager = this.crossExtensionReader.getDbManager(extensionId);
             if (!dbManager) {
-                res.status(404).json({ error: `Database not found for extension: ${extensionId}` });
+                res.status(404).json({error: `Database not found for extension: ${extensionId}`});
                 return;
             }
 
-            const character = await dbManager.upsertCharacter({ id, name: name || undefined });
+            const character = await dbManager.upsertCharacter({id, name: name || undefined});
             res.json(character);
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            res.status(500).json({ error: errorMessage });
+            res.status(500).json({error: errorMessage});
         }
     }
 
@@ -150,31 +150,31 @@ export class ApiEndpoints {
         try {
             const extensionId = this.getExtensionIdFromHeader(req);
             if (!extensionId) {
-                res.status(400).json({ error: 'Extension ID is required in header: x-extension-id' });
+                res.status(400).json({error: 'Extension ID is required in header: x-extension-id'});
                 return;
             }
 
-            const { id } = req.params;
+            const {id} = req.params;
             if (!isValidId(id)) {
-                res.status(400).json({ error: 'Valid character ID is required' });
+                res.status(400).json({error: 'Valid character ID is required'});
                 return;
             }
 
             const dbManager = this.crossExtensionReader.getDbManager(extensionId);
             if (!dbManager) {
-                res.status(404).json({ error: `Database not found for extension: ${extensionId}` });
+                res.status(404).json({error: `Database not found for extension: ${extensionId}`});
                 return;
             }
 
             const success = await dbManager.deleteCharacter(id);
             if (!success) {
-                res.status(404).json({ error: 'Character not found' });
+                res.status(404).json({error: 'Character not found'});
                 return;
             }
-            res.json({ success: true });
+            res.json({success: true});
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            res.status(500).json({ error: errorMessage });
+            res.status(500).json({error: errorMessage});
         }
     }
 
@@ -182,19 +182,19 @@ export class ApiEndpoints {
         try {
             const extensionId = this.getExtensionIdFromHeader(req);
             if (!extensionId) {
-                res.status(400).json({ error: 'Extension ID is required in header: x-extension-id' });
+                res.status(400).json({error: 'Extension ID is required in header: x-extension-id'});
                 return;
             }
 
-            const { characterId } = req.query;
+            const {characterId} = req.query;
             if (typeof characterId !== 'string' || !isValidId(characterId)) {
-                res.status(400).json({ error: 'Valid characterId query parameter is required' });
+                res.status(400).json({error: 'Valid characterId query parameter is required'});
                 return;
             }
 
             const dbManager = this.crossExtensionReader.getDbManager(extensionId);
             if (!dbManager) {
-                res.status(404).json({ error: `Database not found for extension: ${extensionId}` });
+                res.status(404).json({error: `Database not found for extension: ${extensionId}`});
                 return;
             }
 
@@ -202,7 +202,7 @@ export class ApiEndpoints {
             res.json(instances);
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            res.status(500).json({ error: errorMessage });
+            res.status(500).json({error: errorMessage});
         }
     }
 
@@ -210,31 +210,31 @@ export class ApiEndpoints {
         try {
             const extensionId = this.getExtensionIdFromHeader(req);
             if (!extensionId) {
-                res.status(400).json({ error: 'Extension ID is required in header: x-extension-id' });
+                res.status(400).json({error: 'Extension ID is required in header: x-extension-id'});
                 return;
             }
 
-            const { id } = req.params;
+            const {id} = req.params;
             if (!isValidId(id)) {
-                res.status(400).json({ error: 'Valid instance ID is required' });
+                res.status(400).json({error: 'Valid instance ID is required'});
                 return;
             }
 
             const dbManager = this.crossExtensionReader.getDbManager(extensionId);
             if (!dbManager) {
-                res.status(404).json({ error: `Database not found for extension: ${extensionId}` });
+                res.status(404).json({error: `Database not found for extension: ${extensionId}`});
                 return;
             }
 
             const instance = await dbManager.getFullInstance(id);
             if (!instance) {
-                res.status(404).json({ error: 'Instance not found' });
+                res.status(404).json({error: 'Instance not found'});
                 return;
             }
             res.json(instance);
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            res.status(500).json({ error: errorMessage });
+            res.status(500).json({error: errorMessage});
         }
     }
 
@@ -242,19 +242,19 @@ export class ApiEndpoints {
         try {
             const extensionId = this.getExtensionIdFromHeader(req);
             if (!extensionId) {
-                res.status(400).json({ error: 'Extension ID is required in header: x-extension-id' });
+                res.status(400).json({error: 'Extension ID is required in header: x-extension-id'});
                 return;
             }
 
-            const { characterId } = req.params;
+            const {characterId} = req.params;
             if (!isValidId(characterId)) {
-                res.status(400).json({ error: 'Valid character ID is required' });
+                res.status(400).json({error: 'Valid character ID is required'});
                 return;
             }
 
             const dbManager = this.crossExtensionReader.getDbManager(extensionId);
             if (!dbManager) {
-                res.status(404).json({ error: `Database not found for extension: ${extensionId}` });
+                res.status(404).json({error: `Database not found for extension: ${extensionId}`});
                 return;
             }
 
@@ -262,7 +262,7 @@ export class ApiEndpoints {
             res.json(instances);
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            res.status(500).json({ error: errorMessage });
+            res.status(500).json({error: errorMessage});
         }
     }
 
@@ -270,19 +270,19 @@ export class ApiEndpoints {
         try {
             const extensionId = this.getExtensionIdFromHeader(req);
             if (!extensionId) {
-                res.status(400).json({ error: 'Extension ID is required in header: x-extension-id' });
+                res.status(400).json({error: 'Extension ID is required in header: x-extension-id'});
                 return;
             }
 
-            const { id, characterId, name } = req.body;
+            const {id, characterId, name} = req.body;
             if (!id || !isValidId(id) || !characterId || !isValidId(characterId)) {
-                res.status(400).json({ error: 'Valid instance ID and character ID are required' });
+                res.status(400).json({error: 'Valid instance ID and character ID are required'});
                 return;
             }
 
             const dbManager = this.crossExtensionReader.getDbManager(extensionId);
             if (!dbManager) {
-                res.status(404).json({ error: `Database not found for extension: ${extensionId}` });
+                res.status(404).json({error: `Database not found for extension: ${extensionId}`});
                 return;
             }
 
@@ -294,7 +294,7 @@ export class ApiEndpoints {
             res.json(instance);
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            res.status(500).json({ error: errorMessage });
+            res.status(500).json({error: errorMessage});
         }
     }
 
@@ -302,31 +302,31 @@ export class ApiEndpoints {
         try {
             const extensionId = this.getExtensionIdFromHeader(req);
             if (!extensionId) {
-                res.status(400).json({ error: 'Extension ID is required in header: x-extension-id' });
+                res.status(400).json({error: 'Extension ID is required in header: x-extension-id'});
                 return;
             }
 
-            const { id } = req.params;
+            const {id} = req.params;
             if (!isValidId(id)) {
-                res.status(400).json({ error: 'Valid instance ID is required' });
+                res.status(400).json({error: 'Valid instance ID is required'});
                 return;
             }
 
             const dbManager = this.crossExtensionReader.getDbManager(extensionId);
             if (!dbManager) {
-                res.status(404).json({ error: `Database not found for extension: ${extensionId}` });
+                res.status(404).json({error: `Database not found for extension: ${extensionId}`});
                 return;
             }
 
             const success = await dbManager.deleteInstance(id);
             if (!success) {
-                res.status(404).json({ error: 'Instance not found' });
+                res.status(404).json({error: 'Instance not found'});
                 return;
             }
-            res.json({ success: true });
+            res.json({success: true});
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            res.status(500).json({ error: errorMessage });
+            res.status(500).json({error: errorMessage});
         }
     }
 
@@ -334,19 +334,19 @@ export class ApiEndpoints {
         try {
             const extensionId = this.getExtensionIdFromHeader(req);
             if (!extensionId) {
-                res.status(400).json({ error: 'Extension ID is required in header: x-extension-id' });
+                res.status(400).json({error: 'Extension ID is required in header: x-extension-id'});
                 return;
             }
 
-            const { id } = req.params;
+            const {id} = req.params;
             if (!isValidId(id)) {
-                res.status(400).json({ error: 'Valid instance ID is required' });
+                res.status(400).json({error: 'Valid instance ID is required'});
                 return;
             }
 
             const dbManager = this.crossExtensionReader.getDbManager(extensionId);
             if (!dbManager) {
-                res.status(404).json({ error: `Database not found for extension: ${extensionId}` });
+                res.status(404).json({error: `Database not found for extension: ${extensionId}`});
                 return;
             }
 
@@ -354,7 +354,7 @@ export class ApiEndpoints {
             res.json(data);
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            res.status(500).json({ error: errorMessage });
+            res.status(500).json({error: errorMessage});
         }
     }
 
@@ -362,27 +362,27 @@ export class ApiEndpoints {
         try {
             const extensionId = this.getExtensionIdFromHeader(req);
             if (!extensionId) {
-                res.status(400).json({ error: 'Extension ID is required in header: x-extension-id' });
+                res.status(400).json({error: 'Extension ID is required in header: x-extension-id'});
                 return;
             }
 
-            const { id, key } = req.params;
+            const {id, key} = req.params;
             if (!isValidId(id) || !key) {
-                res.status(400).json({ error: 'Valid instance ID and key are required' });
+                res.status(400).json({error: 'Valid instance ID and key are required'});
                 return;
             }
 
             const dbManager = this.crossExtensionReader.getDbManager(extensionId);
             if (!dbManager) {
-                res.status(404).json({ error: `Database not found for extension: ${extensionId}` });
+                res.status(404).json({error: `Database not found for extension: ${extensionId}`});
                 return;
             }
 
             const value = await dbManager.getDataValue(id, key);
-            res.json({ [key]: value });
+            res.json({[key]: value});
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            res.status(500).json({ error: errorMessage });
+            res.status(500).json({error: errorMessage});
         }
     }
 
@@ -390,28 +390,28 @@ export class ApiEndpoints {
         try {
             const extensionId = this.getExtensionIdFromHeader(req);
             if (!extensionId) {
-                res.status(400).json({ error: 'Extension ID is required in header: x-extension-id' });
+                res.status(400).json({error: 'Extension ID is required in header: x-extension-id'});
                 return;
             }
 
-            const { id } = req.params;
-            const { key, value } = req.body;
+            const {id} = req.params;
+            const {key, value} = req.body;
             if (!isValidId(id) || !key) {
-                res.status(400).json({ error: 'Valid instance ID and key are required' });
+                res.status(400).json({error: 'Valid instance ID and key are required'});
                 return;
             }
 
             const dbManager = this.crossExtensionReader.getDbManager(extensionId);
             if (!dbManager) {
-                res.status(404).json({ error: `Database not found for extension: ${extensionId}` });
+                res.status(404).json({error: `Database not found for extension: ${extensionId}`});
                 return;
             }
 
             await dbManager.upsertData(id, key, value);
-            res.json({ success: true, key, value });
+            res.json({success: true, key, value});
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            res.status(500).json({ error: errorMessage });
+            res.status(500).json({error: errorMessage});
         }
     }
 
@@ -419,31 +419,31 @@ export class ApiEndpoints {
         try {
             const extensionId = this.getExtensionIdFromHeader(req);
             if (!extensionId) {
-                res.status(400).json({ error: 'Extension ID is required in header: x-extension-id' });
+                res.status(400).json({error: 'Extension ID is required in header: x-extension-id'});
                 return;
             }
 
-            const { id, key } = req.params;
+            const {id, key} = req.params;
             if (!isValidId(id) || !key) {
-                res.status(400).json({ error: 'Valid instance ID and key are required' });
+                res.status(400).json({error: 'Valid instance ID and key are required'});
                 return;
             }
 
             const dbManager = this.crossExtensionReader.getDbManager(extensionId);
             if (!dbManager) {
-                res.status(404).json({ error: `Database not found for extension: ${extensionId}` });
+                res.status(404).json({error: `Database not found for extension: ${extensionId}`});
                 return;
             }
 
             const success = await dbManager.deleteDataValue(id, key);
             if (!success) {
-                res.status(404).json({ error: 'Data key not found' });
+                res.status(404).json({error: 'Data key not found'});
                 return;
             }
-            res.json({ success: true });
+            res.json({success: true});
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            res.status(500).json({ error: errorMessage });
+            res.status(500).json({error: errorMessage});
         }
     }
 
@@ -451,27 +451,27 @@ export class ApiEndpoints {
         try {
             const extensionId = this.getExtensionIdFromHeader(req);
             if (!extensionId) {
-                res.status(400).json({ error: 'Extension ID is required in header: x-extension-id' });
+                res.status(400).json({error: 'Extension ID is required in header: x-extension-id'});
                 return;
             }
 
-            const { id } = req.params;
+            const {id} = req.params;
             if (!isValidId(id)) {
-                res.status(400).json({ error: 'Valid instance ID is required' });
+                res.status(400).json({error: 'Valid instance ID is required'});
                 return;
             }
 
             const dbManager = this.crossExtensionReader.getDbManager(extensionId);
             if (!dbManager) {
-                res.status(404).json({ error: `Database not found for extension: ${extensionId}` });
+                res.status(404).json({error: `Database not found for extension: ${extensionId}`});
                 return;
             }
 
             const success = await dbManager.clearInstanceData(id);
-            res.json({ success });
+            res.json({success});
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            res.status(500).json({ error: errorMessage });
+            res.status(500).json({error: errorMessage});
         }
     }
 
@@ -479,19 +479,19 @@ export class ApiEndpoints {
         try {
             const extensionId = this.getExtensionIdFromHeader(req);
             if (!extensionId) {
-                res.status(400).json({ error: 'Extension ID is required in header: x-extension-id' });
+                res.status(400).json({error: 'Extension ID is required in header: x-extension-id'});
                 return;
             }
 
-            const { characterId } = req.params;
+            const {characterId} = req.params;
             if (!isValidId(characterId)) {
-                res.status(400).json({ error: 'Valid character ID is required' });
+                res.status(400).json({error: 'Valid character ID is required'});
                 return;
             }
 
             const dbManager = this.crossExtensionReader.getDbManager(extensionId);
             if (!dbManager) {
-                res.status(404).json({ error: `Database not found for extension: ${extensionId}` });
+                res.status(404).json({error: `Database not found for extension: ${extensionId}`});
                 return;
             }
 
@@ -502,10 +502,10 @@ export class ApiEndpoints {
                     deletedCount++;
                 }
             }
-            res.json({ success: true, deletedCount });
+            res.json({success: true, deletedCount});
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            res.status(500).json({ error: errorMessage });
+            res.status(500).json({error: errorMessage});
         }
     }
 
@@ -513,20 +513,20 @@ export class ApiEndpoints {
         try {
             const extensionId = this.getExtensionIdFromHeader(req);
             if (!extensionId) {
-                res.status(400).json({ error: 'Extension ID is required in header: x-extension-id' });
+                res.status(400).json({error: 'Extension ID is required in header: x-extension-id'});
                 return;
             }
 
-            const { id } = req.params;
+            const {id} = req.params;
             const data: Record<string, unknown> = req.body;
             if (!isValidId(id) || typeof data !== 'object' || data === null) {
-                res.status(400).json({ error: 'Valid instance ID and data object are required' });
+                res.status(400).json({error: 'Valid instance ID and data object are required'});
                 return;
             }
 
             const dbManager = this.crossExtensionReader.getDbManager(extensionId);
             if (!dbManager) {
-                res.status(404).json({ error: `Database not found for extension: ${extensionId}` });
+                res.status(404).json({error: `Database not found for extension: ${extensionId}`});
                 return;
             }
 
@@ -534,10 +534,10 @@ export class ApiEndpoints {
             for (const [key, value] of Object.entries(data)) {
                 await dbManager.upsertData(id, key, value);
             }
-            res.json({ success: true, message: 'Instance data overridden successfully' });
+            res.json({success: true, message: 'Instance data overridden successfully'});
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            res.status(500).json({ error: errorMessage });
+            res.status(500).json({error: errorMessage});
         }
     }
 
@@ -545,30 +545,30 @@ export class ApiEndpoints {
         try {
             const extensionId = this.getExtensionIdFromHeader(req);
             if (!extensionId) {
-                res.status(400).json({ error: 'Extension ID is required in header: x-extension-id' });
+                res.status(400).json({error: 'Extension ID is required in header: x-extension-id'});
                 return;
             }
 
-            const { id } = req.params;
+            const {id} = req.params;
             const data: Record<string, unknown> = req.body;
             if (!isValidId(id) || typeof data !== 'object' || data === null) {
-                res.status(400).json({ error: 'Valid instance ID and data object are required' });
+                res.status(400).json({error: 'Valid instance ID and data object are required'});
                 return;
             }
 
             const dbManager = this.crossExtensionReader.getDbManager(extensionId);
             if (!dbManager) {
-                res.status(404).json({ error: `Database not found for extension: ${extensionId}` });
+                res.status(404).json({error: `Database not found for extension: ${extensionId}`});
                 return;
             }
 
             for (const [key, value] of Object.entries(data)) {
                 await dbManager.upsertData(id, key, value);
             }
-            res.json({ success: true, message: 'Instance data merged successfully' });
+            res.json({success: true, message: 'Instance data merged successfully'});
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            res.status(500).json({ error: errorMessage });
+            res.status(500).json({error: errorMessage});
         }
     }
 
@@ -576,20 +576,20 @@ export class ApiEndpoints {
         try {
             const extensionId = this.getExtensionIdFromHeader(req);
             if (!extensionId) {
-                res.status(400).json({ error: 'Extension ID is required in header: x-extension-id' });
+                res.status(400).json({error: 'Extension ID is required in header: x-extension-id'});
                 return;
             }
 
-            const { id } = req.params;
-            const { keys } = req.body;
+            const {id} = req.params;
+            const {keys} = req.body;
             if (!isValidId(id) || !Array.isArray(keys)) {
-                res.status(400).json({ error: 'Valid instance ID and keys array are required' });
+                res.status(400).json({error: 'Valid instance ID and keys array are required'});
                 return;
             }
 
             const dbManager = this.crossExtensionReader.getDbManager(extensionId);
             if (!dbManager) {
-                res.status(404).json({ error: `Database not found for extension: ${extensionId}` });
+                res.status(404).json({error: `Database not found for extension: ${extensionId}`});
                 return;
             }
 
@@ -599,90 +599,90 @@ export class ApiEndpoints {
                     removedCount++;
                 }
             }
-            res.json({ success: true, removedCount });
+            res.json({success: true, removedCount});
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            res.status(500).json({ error: errorMessage });
+            res.status(500).json({error: errorMessage});
         }
     }
 
     private async registerExtension(req: Request, res: Response): Promise<void> {
         try {
-            const { extensionId } = req.body;
+            const {extensionId} = req.body;
             if (!extensionId || !isValidId(extensionId)) {
-                res.status(400).json({ error: 'Valid extension ID is required in body' });
+                res.status(400).json({error: 'Valid extension ID is required in body'});
                 return;
             }
 
             await this.crossExtensionReader.registerExtensionDatabase(extensionId);
-            res.json({ success: true, message: `Extension ${extensionId} registered successfully` });
+            res.json({success: true, message: `Extension ${extensionId} registered successfully`});
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            res.status(500).json({ error: errorMessage });
+            res.status(500).json({error: errorMessage});
         }
     }
 
     private async deregisterExtension(req: Request, res: Response): Promise<void> {
         try {
-            const { extensionId } = req.body;
+            const {extensionId} = req.body;
             if (!extensionId || !isValidId(extensionId)) {
-                res.status(400).json({ error: 'Valid extension ID is required in body' });
+                res.status(400).json({error: 'Valid extension ID is required in body'});
                 return;
             }
 
             await this.crossExtensionReader.deregisterExtensionDatabase(extensionId);
-            res.json({ success: true, message: `Extension ${extensionId} deregistered successfully` });
+            res.json({success: true, message: `Extension ${extensionId} deregistered successfully`});
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            res.status(500).json({ error: errorMessage });
+            res.status(500).json({error: errorMessage});
         }
     }
 
     private async getCrossExtensionCharacter(req: Request, res: Response): Promise<void> {
         try {
-            const { extensionId, id } = req.params;
+            const {extensionId, id} = req.params;
             if (!isValidId(extensionId) || !isValidId(id)) {
-                res.status(400).json({ error: 'Valid extension ID and character ID are required' });
+                res.status(400).json({error: 'Valid extension ID and character ID are required'});
                 return;
             }
 
             const character = await this.crossExtensionReader.getFullCharacter(extensionId, id);
             if (!character) {
-                res.status(404).json({ error: `Character not found in extension ${extensionId}` });
+                res.status(404).json({error: `Character not found in extension ${extensionId}`});
                 return;
             }
             res.json(character);
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            res.status(500).json({ error: errorMessage });
+            res.status(500).json({error: errorMessage});
         }
     }
 
     private async getCrossExtensionInstance(req: Request, res: Response): Promise<void> {
         try {
-            const { extensionId, id } = req.params;
+            const {extensionId, id} = req.params;
             if (!isValidId(extensionId) || !isValidId(id)) {
-                res.status(400).json({ error: 'Valid extension ID and instance ID are required' });
+                res.status(400).json({error: 'Valid extension ID and instance ID are required'});
                 return;
             }
 
             const instance = await this.crossExtensionReader.getFullInstance(extensionId, id);
             if (!instance) {
-                res.status(404).json({ error: `Instance not found in extension ${extensionId}` });
+                res.status(404).json({error: `Instance not found in extension ${extensionId}`});
                 return;
             }
             res.json(instance);
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            res.status(500).json({ error: errorMessage });
+            res.status(500).json({error: errorMessage});
         }
     }
 
     private async getCrossExtensionInstanceData(req: Request, res: Response): Promise<void> {
         try {
-            const { extensionId, id } = req.params;
+            const {extensionId, id} = req.params;
             if (!isValidId(extensionId) || !isValidId(id)) {
-                res.status(400).json({ error: 'Valid extension ID and instance ID are required' });
+                res.status(400).json({error: 'Valid extension ID and instance ID are required'});
                 return;
             }
 
@@ -690,31 +690,31 @@ export class ApiEndpoints {
             res.json(data);
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            res.status(500).json({ error: errorMessage });
+            res.status(500).json({error: errorMessage});
         }
     }
 
     private async getCrossExtensionInstanceDataKey(req: Request, res: Response): Promise<void> {
         try {
-            const { extensionId, id, key } = req.params;
+            const {extensionId, id, key} = req.params;
             if (!isValidId(extensionId) || !isValidId(id) || !key) {
-                res.status(400).json({ error: 'Valid extension ID, instance ID, and key are required' });
+                res.status(400).json({error: 'Valid extension ID, instance ID, and key are required'});
                 return;
             }
 
             const value = await this.crossExtensionReader.getDataValue(extensionId, id, key);
-            res.json({ [key]: value });
+            res.json({[key]: value});
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            res.status(500).json({ error: errorMessage });
+            res.status(500).json({error: errorMessage});
         }
     }
 
     private async getCrossExtensionAllCharacters(req: Request, res: Response): Promise<void> {
         try {
-            const { extensionId } = req.params;
+            const {extensionId} = req.params;
             if (!isValidId(extensionId)) {
-                res.status(400).json({ error: 'Valid extension ID is required' });
+                res.status(400).json({error: 'Valid extension ID is required'});
                 return;
             }
 
@@ -722,15 +722,15 @@ export class ApiEndpoints {
             res.json(characters);
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            res.status(500).json({ error: errorMessage });
+            res.status(500).json({error: errorMessage});
         }
     }
 
     private async getCrossExtensionInstancesByCharacter(req: Request, res: Response): Promise<void> {
         try {
-            const { extensionId, characterId } = req.params;
+            const {extensionId, characterId} = req.params;
             if (!isValidId(extensionId) || !isValidId(characterId)) {
-                res.status(400).json({ error: 'Valid extension ID and character ID are required' });
+                res.status(400).json({error: 'Valid extension ID and character ID are required'});
                 return;
             }
 
@@ -738,7 +738,7 @@ export class ApiEndpoints {
             res.json(instances);
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            res.status(500).json({ error: errorMessage });
+            res.status(500).json({error: errorMessage});
         }
     }
 }

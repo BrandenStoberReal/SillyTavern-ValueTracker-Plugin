@@ -135,5 +135,4 @@ The system supports storing any type of data in instances, including:
 
 ## Storage Location
 
-Each extension has its own database file stored at `./db/{extensionId}.db` relative to the application root. Extensions
-can specify custom database file locations during registration.
+Each extension has its own database file stored at `./db/{extensionId}.db` relative to the application root.

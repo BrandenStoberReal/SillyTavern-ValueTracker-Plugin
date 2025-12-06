@@ -116,6 +116,20 @@ Registration endpoints require the extension ID in the request body since the ex
 
 ## Instance Management
 
+### Get All Instances
+
+- **Endpoint**: `GET /api/plugins/valuetracker/instances`
+- **Description**: Retrieves all instances for a specific character, must be passed as a query parameter.
+- **Headers**:
+    - `x-extension-id` (required): The unique identifier for the extension.
+- **Query Parameters**:
+    - `characterId` (string): The unique identifier for the character.
+- **Response**:
+    - Success: `200 OK` with array of Instance objects
+    - Error: `400 Bad Request` if extension ID is missing from header or if `characterId` is not a valid id.
+    - Error: `404 Not Found` if database not found for extension
+    - Error: `500 Internal Server Error` with error details
+
 ### Get All Instances for Character
 
 - **Endpoint**: `GET /api/plugins/valuetracker/characters/:characterId/instances`
